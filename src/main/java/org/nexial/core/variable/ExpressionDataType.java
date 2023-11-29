@@ -23,7 +23,7 @@ public abstract class ExpressionDataType<T> {
 
     protected ExpressionDataType() { }
 
-    public ExpressionDataType(String textValue) throws TypeConversionException {
+    protected ExpressionDataType(String textValue) throws TypeConversionException {
         this.textValue = textValue;
         init();
     }
