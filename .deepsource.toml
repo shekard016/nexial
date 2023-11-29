@@ -1,12 +1,6 @@
 version = 1
 
 [[analyzers]]
-name = "java"
-
-  [analyzers.meta]
-  runtime_version = "11"
-
-[[analyzers]]
 name = "test-coverage"
 
 [[analyzers]]
@@ -15,3 +9,15 @@ name = "kotlin"
   [analyzers.meta]
   runtime_version = "1.8"
   language_version = "1.7"
+
+[[analyzers]]
+name = "java"
+
+  [analyzers.meta]
+  runtime_version = "17"
+
+[[transformers]]
+name = "ktlint"
+
+[[transformers]]
+name = "google-java-format"
