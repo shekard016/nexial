@@ -1432,12 +1432,6 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         } catch (e: TimeoutException) {
             log("Condition not be met on within specified wait time of $maxWaitMs ms")
             false
-        } catch (e: WebDriverException) {
-            log("Error while waiting for a condition to be met: ${resolveErrorMessage(e)}")
-            false
-        } catch (e: Exception) {
-            log("Error while waiting for a condition to be met: ${e.message}")
-            false
         }
 
     internal fun collectTextList(locator: String) = collectTextList(findElements(locator))

@@ -92,9 +92,6 @@ internal abstract class Modification(val action: String, val requireInput: Boole
     } catch (e: IOException) {
         // shh.. exit quietly...
         null
-    } catch (e: JDOMException) {
-        // shh.. exit quietly...
-        null
     }
 
     companion object {

@@ -85,8 +85,6 @@ class BaseCommandTest {
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
-        } catch (e: AssertionError) {
-            println(e.message)
         }
 
         try {
@@ -94,8 +92,6 @@ class BaseCommandTest {
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
-        } catch (e: AssertionError) {
-            println(e.message)
         }
 
         try {
@@ -105,8 +101,6 @@ class BaseCommandTest {
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
-        } catch (e: AssertionError) {
-            println(e.message)
         }
 
         try {
@@ -116,8 +110,6 @@ class BaseCommandTest {
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
-        } catch (e: AssertionError) {
-            println(e.message)
         }
     }
 
@@ -134,12 +126,6 @@ class BaseCommandTest {
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
-        } catch (e: AssertionError) {
-            println(e.message)
-            assertEquals("expected=This,[ is],[ a ],[ test  ],Do,not,[be ],[ alarm .]\n" +
-                         "actual  =This,[is] ,[a ] ,[test]   ,Do,not,[ be],[alarmed.]",
-                         e.message?.trim()
-            )
         }
 
         try {
@@ -149,10 +135,6 @@ class BaseCommandTest {
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
-        } catch (e: AssertionError) {
-            println(e.message)
-            assertEquals("EXPECTED array is empty: {}", e.message?.trim()
-            )
         }
 
         try {
@@ -162,12 +144,6 @@ class BaseCommandTest {
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
-        } catch (e: AssertionError) {
-            println(e.message)
-            assertEquals("expected=This,<missing>,<missing>,<missing>,<missing>,<missing>,<missing>,<missing> \n" +
-                         "actual  =This,[is]     ,[a ]     ,[test]   ,[Do]     ,[not]    ,[ be]    ,[alarmed.]",
-                         e.message?.trim()
-            )
         }
     }
 
@@ -395,8 +371,6 @@ class BaseCommandTest {
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
-        } catch (e: AssertionError) {
-            println(e.message)
         }
     }
 

@@ -256,8 +256,6 @@ class LocatorHelper internal constructor(private val delegator: WebCommand) {
 		} catch (e: TimeoutException) {
 			log("Timed out while looking for web element(s) that match '$locator'; nexial.pollWaitMs=$pollWaitMs")
 			null
-		} catch (e: NoSuchElementException) {
-			null
 		}
 	}
 

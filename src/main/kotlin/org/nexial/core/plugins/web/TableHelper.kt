@@ -226,9 +226,6 @@ class TableHelper(private val webCommand: WebCommand) {
 			} catch (e: StaleElementReferenceException) {
 				ConsoleUtils.log("$msgPrefix: became stale; fetching again...")
 				table = webCommand.toElement(locator)
-			} catch (e: InvalidElementStateException) {
-				ConsoleUtils.log("$msgPrefix: became invalid; fetching again...")
-				table = webCommand.toElement(locator)
 			}
 		}
 
