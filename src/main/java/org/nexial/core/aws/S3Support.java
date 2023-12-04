@@ -17,119 +17,129 @@
 
 package org.nexial.core.aws;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.nexial.core.aws.AwsS3Helper.PutOption;
-import org.nexial.core.utils.ConsoleUtils;
+import static com.amazonaws.regions.Regions.DEFAULT_REGION;
+import static org.nexial.core.NexialConst.S3_PATH_SEP;
+import static org.nexial.core.NexialConst.S3_PUBLIC_URL;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import java.io.File;
 import java.io.IOException;
 import javax.validation.constraints.NotNull;
-
-import static com.amazonaws.regions.Regions.DEFAULT_REGION;
-import static org.nexial.core.NexialConst.S3_PATH_SEP;
-import static org.nexial.core.NexialConst.S3_PUBLIC_URL;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.nexial.core.aws.AwsS3Helper.PutOption;
+import org.nexial.core.utils.ConsoleUtils;
 
 public abstract class S3Support extends AwsSupport {
-    protected String encoding;
-    protected boolean s3PathStyleAccessEnabled;
+  protected String encoding;
+  protected boolean s3PathStyleAccessEnabled;
 
-    public void setEncoding(String encoding) { this.encoding = encoding; }
+  public void setEncoding(String encoding) {
+    this.encoding = encoding;
+  }
 
-    public void setS3PathStyleAccessEnabled(boolean s3PathStyleAccessEnabled) {
-        this.s3PathStyleAccessEnabled = s3PathStyleAccessEnabled;
+  public void setS3PathStyleAccessEnabled(boolean s3PathStyleAccessEnabled) {
+    this.s3PathStyleAccessEnabled = s3PathStyleAccessEnabled;
+  }
+
+  public String importToS3(File source, String targetPath, boolean removeLocal) throws IOException {
+    PutObjectResult result = copyToS3(source, targetPath);
+
+    // no exception thrown means upload is successful
+    String publicUrl = result.getMetadata().getUserMetaDataOf(S3_PUBLIC_URL);
+
+    if (StringUtils.isBlank(publicUrl)) {
+      throw new IOException(
+          String.format(
+              "Probably the file %s is not imported to S3 as returned blank url", source));
     }
 
-    public String importToS3(File source, String targetPath, boolean removeLocal) throws IOException {
-        PutObjectResult result = copyToS3(source, targetPath);
-
-        // no exception thrown means upload is successful
-        String publicUrl = result.getMetadata().getUserMetaDataOf(S3_PUBLIC_URL);
-
-        if (StringUtils.isBlank(publicUrl)) {
-            throw new IOException(String.format("Probably the file %s is not imported to S3 as returned blank url",
-                                                source));
-        }
-
-        if (removeLocal && !FileUtils.deleteQuietly(source)) {
-            // ready to delete
-            throw new IOException("Unable to delete file " + source + " after being copied to S3");
-        }
-
-        ConsoleUtils.log("output-to-cloud", "transferred artifact %s to %s", source, publicUrl);
-        return publicUrl;
+    if (removeLocal && !FileUtils.deleteQuietly(source)) {
+      // ready to delete
+      throw new IOException("Unable to delete file " + source + " after being copied to S3");
     }
 
-    public String importToS3(File source, String targetPath) throws IOException {
-        return importToS3(source, targetPath, true);
+    ConsoleUtils.log("output-to-cloud", "transferred artifact %s to %s", source, publicUrl);
+    return publicUrl;
+  }
+
+  public String importToS3(File source, String targetPath) throws IOException {
+    return importToS3(source, targetPath, true);
+  }
+
+  /**
+   * Download an object from S3.
+   *
+   * @param bucket the S3 bucket path.
+   * @param removeFromBucket flag which decides whether to remove the file from bucket or not.
+   * @return content of the file in terms of bytes.
+   * @throws IOException when file failed to download or delete in case of move.
+   */
+  public byte[] downloadFromS3(
+      final @NotNull String bucket, @NotNull final String key, final boolean removeFromBucket)
+      throws IOException {
+    return newAWSS3Helper(bucket + "/" + key).copyFromS3(bucket, key, removeFromBucket);
+  }
+
+  public void delete(final @NotNull String bucket, @NotNull final String key) {
+    newAWSS3Helper(bucket + S3_PATH_SEP + key).deleteS3Object(bucket, key);
+  }
+
+  /**
+   * @param to S3 bucket + folder
+   */
+  protected PutObjectResult copyToS3(File from, String to) {
+    PutOption option = new PutOption();
+    option.setPubliclyReadable(true);
+    option.setReducedRedundancy(true);
+
+    // conform to URL convention for path separator
+    to = StringUtils.replace(to, "\\", "/");
+
+    PutObjectResult result = newAWSS3Helper(to).copyToS3(from, option);
+
+    if (logger.isDebugEnabled()) {
+      ObjectMetadata metadata = result.getMetadata();
+      logger.debug("copy-to-s3 complete. Details below...");
+      logger.debug(
+          "\tLocation:      s3://" + StringUtils.appendIfMissing(to, "/") + from.getName());
+      logger.debug("\tURL:           " + metadata.getUserMetaDataOf(S3_PUBLIC_URL));
+      logger.debug("\tFile length:   " + from.length());
+      logger.debug("\tStorage Class: " + metadata.getStorageClass());
     }
 
-    /**
-     * Download an object from S3.
-     *
-     * @param bucket           the S3 bucket path.
-     * @param removeFromBucket flag which decides whether to remove the file from bucket or not.
-     * @return content of the file in terms of bytes.
-     * @throws IOException when file failed to download or delete in case of move.
-     */
-    public byte[] downloadFromS3(final @NotNull String bucket, @NotNull final String key,
-                                 final boolean removeFromBucket) throws IOException {
-        return newAWSS3Helper(bucket + "/" + key).copyFromS3(bucket, key, removeFromBucket);
+    return result;
+  }
+
+  protected byte[] copyFromS3(String fromPath, String targetFile) throws IOException {
+    return newAWSS3Helper(fromPath).copyFromS3(targetFile);
+  }
+
+  protected AwsS3Helper newAWSS3Helper(String s3path) {
+    AwsS3Helper s3 = new AwsS3Helper();
+    if (StringUtils.isNotBlank(accessKey)) {
+      s3.setAccessKey(accessKey);
+    }
+    if (StringUtils.isNotBlank(secretKey)) {
+      s3.setSecretKey(secretKey);
+    }
+    s3.setUrl(url);
+    s3.setRegion((region == null) ? DEFAULT_REGION : region);
+
+    if (StringUtils.isNotBlank(s3path)) {
+      s3.setBucketName(StringUtils.substringBefore(s3path, "/"));
+      String subdir = StringUtils.substringAfter(s3path, "/");
+      if (StringUtils.isNotEmpty(subdir)) {
+        s3.setSubDir(subdir);
+      }
     }
 
-    public void delete(final @NotNull String bucket, @NotNull final String key) {
-        newAWSS3Helper(bucket + S3_PATH_SEP + key).deleteS3Object(bucket, key);
-    }
+    // added "PathStyleAccessEnabled() to avoid SSL certificate issue since the adding bucket as
+    // subdomain to
+    // Amazon's SSL cert would result in cert to domain name mismatch
+    s3.setS3PathStyleAccessEnabled(s3PathStyleAccessEnabled);
 
-    /**
-     * @param to S3 bucket + folder
-     */
-    protected PutObjectResult copyToS3(File from, String to) {
-        PutOption option = new PutOption();
-        option.setPubliclyReadable(true);
-        option.setReducedRedundancy(true);
-
-        // conform to URL convention for path separator
-        to = StringUtils.replace(to, "\\", "/");
-
-        PutObjectResult result = newAWSS3Helper(to).copyToS3(from, option);
-
-
-        if (logger.isDebugEnabled()) {
-            ObjectMetadata metadata = result.getMetadata();
-            logger.debug("copy-to-s3 complete. Details below...");
-            logger.debug("\tLocation:      s3://" + StringUtils.appendIfMissing(to, "/") + from.getName());
-            logger.debug("\tURL:           " + metadata.getUserMetaDataOf(S3_PUBLIC_URL));
-            logger.debug("\tFile length:   " + from.length());
-            logger.debug("\tStorage Class: " + metadata.getStorageClass());
-        }
-
-        return result;
-    }
-
-    protected byte[] copyFromS3(String fromPath, String targetFile) throws IOException {
-        return newAWSS3Helper(fromPath).copyFromS3(targetFile);
-    }
-
-    protected AwsS3Helper newAWSS3Helper(String s3path) {
-        AwsS3Helper s3 = new AwsS3Helper();
-        if (StringUtils.isNotBlank(accessKey)) { s3.setAccessKey(accessKey); }
-        if (StringUtils.isNotBlank(secretKey)) { s3.setSecretKey(secretKey); }
-        s3.setUrl(url);
-        s3.setRegion((region == null) ? DEFAULT_REGION : region);
-
-        if (StringUtils.isNotBlank(s3path)) {
-            s3.setBucketName(StringUtils.substringBefore(s3path, "/"));
-            String subdir = StringUtils.substringAfter(s3path, "/");
-            if (StringUtils.isNotEmpty(subdir)) { s3.setSubDir(subdir); }
-        }
-
-        // added "PathStyleAccessEnabled() to avoid SSL certificate issue since the adding bucket as subdomain to
-        // Amazon's SSL cert would result in cert to domain name mismatch
-        s3.setS3PathStyleAccessEnabled(s3PathStyleAccessEnabled);
-
-        return s3;
-    }
+    return s3;
+  }
 }
