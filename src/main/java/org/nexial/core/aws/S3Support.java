@@ -75,7 +75,7 @@ public abstract class S3Support extends AwsSupport {
      * @throws IOException when file failed to download or delete in case of move.
      */
     public byte[] downloadFromS3(final @NotNull String bucket, @NotNull final String key,
-                                 final @NotNull boolean removeFromBucket) throws IOException {
+                                 final boolean removeFromBucket) throws IOException {
         return newAWSS3Helper(bucket + "/" + key).copyFromS3(bucket, key, removeFromBucket);
     }
 

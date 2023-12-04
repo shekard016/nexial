@@ -1187,7 +1187,7 @@ public class Browser implements ForcefulTerminate {
         if (context.getBooleanConfig("web", profile, BROWSER_INCOGNITO)) { options.addArguments(KEY_INCOGNITO); }
     }
 
-    @NotNull
+    
     private boolean updateChromeDriver(WebDriverHelper helper) throws IOException {
         log("Corresponding browser might have been updated recently. Nexial will stop the webdriver in use to update it...");
         RuntimeUtils.terminateInstance(new File(helper.getDriverLocation()).getName());

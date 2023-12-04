@@ -200,7 +200,7 @@ public class AwsS3Helper {
      */
     public byte[] copyFromS3(@NotNull final String bucket,
                              @NotNull final String key,
-                             @NotNull final boolean removeFromBucket)
+                             final boolean removeFromBucket)
         throws IOException {
         assert StringUtils.isNotBlank(accessKey);
         assert StringUtils.isNotBlank(secretKey);
