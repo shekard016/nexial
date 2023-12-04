@@ -1539,7 +1539,7 @@ public class ExecutionContext {
         return config.getOrDefault(key, contextValue);
     }
 
-    @NotNull
+    
     public int getIntConfig(String command, String profile, String key) {
         if (StringUtils.isBlank(key)) { throw new IllegalArgumentException("key is missing"); }
 
@@ -1555,7 +1555,7 @@ public class ExecutionContext {
         return NumberUtils.toInt(configValue, contextValue);
     }
 
-    @NotNull
+    
     public double getDoubleConfig(String command, String profile, String key) {
         if (StringUtils.isBlank(key)) { throw new IllegalArgumentException("key is missing"); }
 
@@ -1571,7 +1571,7 @@ public class ExecutionContext {
         return NumberUtils.toDouble(configValue, contextValue);
     }
 
-    @NotNull
+    
     public boolean getBooleanConfig(String command, String profile, String key) {
         if (StringUtils.isBlank(key)) { throw new IllegalArgumentException("key is missing"); }
 
@@ -1587,7 +1587,7 @@ public class ExecutionContext {
         return BooleanUtils.toBoolean(configValue);
     }
 
-    @NotNull
+    
     public boolean hasConfig(String command, String profile, String key) {
         if (StringUtils.isBlank(key)) { return false; }
 
