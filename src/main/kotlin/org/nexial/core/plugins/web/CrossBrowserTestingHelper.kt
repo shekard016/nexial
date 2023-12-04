@@ -40,7 +40,6 @@ import org.nexial.core.utils.ConsoleUtils
 import org.nexial.core.utils.WebDriverUtils
 import org.openqa.selenium.MutableCapabilities
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.remote.RemoteWebDriver
 import java.io.File
 import java.io.IOException
@@ -58,8 +57,9 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
         val config = context.getDataByPrefix(NS)
         val username = config.remove(KEY_USERNAME)
         val authKey = config.remove(KEY_AUTHKEY)
-        if (StringUtils.isBlank(username) || StringUtils.isBlank(authKey))
+        if (StringUtils.isBlank(username) || StringUtils.isBlank(authKey)) {
             throw RuntimeException("Both $KEY_USERNAME and $KEY_AUTHKEY are required to use CrossBrowserTesting")
+        }
 
         val capabilities = MutableCapabilities()
         WebDriverCapabilityUtils.initCapabilities(context, capabilities)
@@ -68,10 +68,16 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
         handleProjectMeta(capabilities, config)
 
         // remaining configs specific to cbt
-        WebDriverCapabilityUtils.setCapability(capabilities, KEY_ENABLE_VIDEO,
-                                               config.getOrDefault(KEY_ENABLE_VIDEO, DEF_ENABLE_VIDEO))
-        WebDriverCapabilityUtils.setCapability(capabilities, KEY_RECORD_NETWORK,
-                                               config.getOrDefault(KEY_RECORD_NETWORK, DEF_RECORD_NETWORK))
+        WebDriverCapabilityUtils.setCapability(
+            capabilities,
+            KEY_ENABLE_VIDEO,
+            config.getOrDefault(KEY_ENABLE_VIDEO, DEF_ENABLE_VIDEO),
+        )
+        WebDriverCapabilityUtils.setCapability(
+            capabilities,
+            KEY_RECORD_NETWORK,
+            config.getOrDefault(KEY_RECORD_NETWORK, DEF_RECORD_NETWORK),
+        )
         config.forEach { (key: String?, value: String?) ->
             WebDriverCapabilityUtils.setCapability(capabilities, key, value)
         }
@@ -95,13 +101,14 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
 
     protected fun handleLocal(username: String?, authkey: String?, config: MutableMap<String, String>) {
         val enableLocal =
-                config.containsKey(KEY_ENABLE_LOCAL) && BooleanUtils.toBoolean(config.remove(KEY_ENABLE_LOCAL))
+            config.containsKey(KEY_ENABLE_LOCAL) && BooleanUtils.toBoolean(config.remove(KEY_ENABLE_LOCAL))
         if (!enableLocal) return
         // default is true for backward compatibility
-        isTerminateLocal = if (!config.containsKey(KEY_TERMINATE_LOCAL))
+        isTerminateLocal = if (!config.containsKey(KEY_TERMINATE_LOCAL)) {
             true
-        else
+        } else {
             BooleanUtils.toBoolean(config.remove(KEY_TERMINATE_LOCAL))
+        }
 
         try {
             val helper = newInstance(crossbrowsertesting, context)
@@ -113,7 +120,7 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
 
             val localStartWaitMs = StringUtils.trim(config.remove(KEY_LOCAL_START_WAITMS))
             val useReadyFile = StringUtils.isEmpty(localStartWaitMs) ||
-                               StringUtils.equals(localStartWaitMs, AUTO_LOCAL_START_WAIT)
+                StringUtils.equals(localStartWaitMs, AUTO_LOCAL_START_WAIT)
             ConsoleUtils.log("starting new instance of $cbtLocal...")
             if (useReadyFile) {
                 val waitMs = MAX_LOCAL_START_WAITMS
@@ -125,8 +132,9 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
                 val maxWaitTime = System.currentTimeMillis() + waitMs
                 while (!FileUtil.isFileReadable(LOCAL_READY_FILE)) {
                     Thread.sleep(500)
-                    if (System.currentTimeMillis() > maxWaitTime)
+                    if (System.currentTimeMillis() > maxWaitTime) {
                         throw IOException("CrossBrowserTesting Local executable NOT ready within max wait time")
+                    }
                 }
             } else {
                 RuntimeUtils.runAppNoWait(driver.parent, driver.name, cmdlineArgs)
@@ -146,17 +154,22 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
      */
     protected fun handlePlatform(capabilities: MutableCapabilities, config: MutableMap<String, String>) {
         val browserName = config.remove(KEY_BROWSER)
-        if (StringUtils.isBlank(browserName))
+        if (StringUtils.isBlank(browserName)) {
             throw RuntimeException("'$NS$KEY_BROWSER' is required to use CrossBrowserTesting. $docUrl")
+        }
         WebDriverCapabilityUtils.setCapability(capabilities, KEY_BROWSER, browserName)
         val targetOS = config.remove(KEY_PLATFORM)
         if (StringUtils.isNotBlank(targetOS)) {
             // not mobile for sure
             WebDriverCapabilityUtils.setCapability(capabilities, KEY_PLATFORM, targetOS)
             WebDriverCapabilityUtils.setCapability(
-                    capabilities, KEY_RESOLUTION,
-                    StringUtils.defaultIfBlank(config.remove(KEY_RESOLUTION),
-                                               context.getStringData(Web.BROWSER_WINDOW_SIZE)))
+                capabilities,
+                KEY_RESOLUTION,
+                StringUtils.defaultIfBlank(
+                    config.remove(KEY_RESOLUTION),
+                    context.getStringData(Web.BROWSER_WINDOW_SIZE),
+                ),
+            )
             WebDriverCapabilityUtils.setCapability(capabilities, KEY_BROWSER_VER, config.remove(KEY_BROWSER_VER))
             isMobile = false
             ConsoleUtils.log("[CBT] setting up $browserName on $targetOS")
@@ -165,26 +178,36 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
 
         val targetMobileOS = config.remove(KEY_MOBILE_PLATFORM)
         // we gotta have either `KEY_PLATFORM` or `KEY_MOBILE_PLATFORM`
-        if (StringUtils.isBlank(targetMobileOS))
+        if (StringUtils.isBlank(targetMobileOS)) {
             throw RuntimeException("Either '$NS$KEY_PLATFORM' or '$NS$KEY_MOBILE_PLATFORM' is required. $docUrl")
+        }
 
         // mobile for sure, at this point
         val deviceName = config.remove(KEY_DEVICE)
-        if (StringUtils.isBlank(deviceName))
+        if (StringUtils.isBlank(deviceName)) {
             throw RuntimeException("'$NS$KEY_DEVICE' is required for mobile web testing. $docUrl")
+        }
         WebDriverCapabilityUtils.setCapability(capabilities, KEY_MOBILE_PLATFORM, targetMobileOS)
-        WebDriverCapabilityUtils.setCapability(capabilities, KEY_MOBILE_PLATFORM_VER,
-                                               config.remove(KEY_MOBILE_PLATFORM_VER))
+        WebDriverCapabilityUtils.setCapability(
+            capabilities,
+            KEY_MOBILE_PLATFORM_VER,
+            config.remove(KEY_MOBILE_PLATFORM_VER),
+        )
         WebDriverCapabilityUtils.setCapability(capabilities, KEY_DEVICE, deviceName)
-        WebDriverCapabilityUtils.setCapability(capabilities, KEY_DEVICE_ORIENTATION,
-                                               config.remove(KEY_DEVICE_ORIENTATION))
+        WebDriverCapabilityUtils.setCapability(
+            capabilities,
+            KEY_DEVICE_ORIENTATION,
+            config.remove(KEY_DEVICE_ORIENTATION),
+        )
         isMobile = true
         ConsoleUtils.log("[CBT] setting up $browserName on $deviceName/$targetMobileOS")
     }
 
     protected fun handleProjectMeta(capabilities: MutableCapabilities, config: MutableMap<String, String>) {
-        val buildNum = StringUtils.defaultIfBlank(config.remove(KEY_BUILD),
-                                                  context.getStringData(SCRIPT_REF_PREFIX + BUILD_NO))
+        val buildNum = StringUtils.defaultIfBlank(
+            config.remove(KEY_BUILD),
+            context.getStringData(SCRIPT_REF_PREFIX + BUILD_NO),
+        )
         WebDriverCapabilityUtils.setCapability(capabilities, KEY_BUILD, buildNum)
         val execDef = context.execDef ?: return
         var testName: String? = null
@@ -215,12 +238,16 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
 
             val wsCommand = context.findPlugin("ws") as? WsCommand ?: return
             try {
-                wsCommand.put(statusApi,
-                              """{"action":"set_score", "score":"${if (summary.failCount > 0) "fail" else "pass"}"}""",
-                              RandomStringUtils.randomAlphabetic(5))
-                wsCommand.put(statusApi,
-                              """{"action":"set_description", "description":"${formatStatusDescription(summary)}"}""",
-                              RandomStringUtils.randomAlphabetic(5))
+                wsCommand.put(
+                    statusApi,
+                    """{"action":"set_score", "score":"${if (summary.failCount > 0) "fail" else "pass"}"}""",
+                    RandomStringUtils.randomAlphabetic(5),
+                )
+                wsCommand.put(
+                    statusApi,
+                    """{"action":"set_description", "description":"${formatStatusDescription(summary)}"}""",
+                    RandomStringUtils.randomAlphabetic(5),
+                )
             } finally {
                 // put BASIC AUTH back
                 context.setData(WS_BASIC_USER, oldUsername)

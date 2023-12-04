@@ -95,18 +95,22 @@ class BaseCommandTest {
         }
 
         try {
-            subject.assertArrayEqual("519,23,0.913,587239,42739.187,2364,918.27,36591,82.736492,873,628,374.6",
-                                     "519,23,0.913,58723.9,42739.187001,2364,918.27,36591,82.736492,873,628,374.60",
-                                     "true")
+            subject.assertArrayEqual(
+                "519,23,0.913,587239,42739.187,2364,918.27,36591,82.736492,873,628,374.6",
+                "519,23,0.913,58723.9,42739.187001,2364,918.27,36591,82.736492,873,628,374.60",
+                "true",
+            )
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
         }
 
         try {
-            subject.assertArrayEqual("now is the,time for,all good men, to, ,come to the aid of his,country",
-                                     "now is the time for,all good men to,come to the,aid of his,country",
-                                     "true")
+            subject.assertArrayEqual(
+                "now is the,time for,all good men, to, ,come to the aid of his,country",
+                "now is the time for,all good men to,come to the,aid of his,country",
+                "true",
+            )
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
@@ -120,27 +124,33 @@ class BaseCommandTest {
         subject.init(context)
 
         try {
-            subject.assertArrayEqual("This, is, a , test  ,Do,not,be , alarm .",
-                                     "This,is,a ,test,Do,not, be,alarmed.",
-                                     "true")
+            subject.assertArrayEqual(
+                "This, is, a , test  ,Do,not,be , alarm .",
+                "This,is,a ,test,Do,not, be,alarmed.",
+                "true",
+            )
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
         }
 
         try {
-            subject.assertArrayEqual("",
-                                     "This,is,a ,test,Do,not, be,alarmed.",
-                                     "true")
+            subject.assertArrayEqual(
+                "",
+                "This,is,a ,test,Do,not, be,alarmed.",
+                "true",
+            )
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
         }
 
         try {
-            subject.assertArrayEqual("This",
-                                     "This,is,a ,test,Do,not, be,alarmed.",
-                                     "true")
+            subject.assertArrayEqual(
+                "This",
+                "This,is,a ,test,Do,not, be,alarmed.",
+                "true",
+            )
             fail("expect failure")
         } catch (e: Exception) {
             fail(e.message)
@@ -344,7 +354,6 @@ class BaseCommandTest {
         } catch (e: Throwable) {
             // it's fine/expected
         }
-
     }
 
     @Test
@@ -454,14 +463,18 @@ class BaseCommandTest {
         assertEquals(3, context.getIntData("count").toLong())
 
         // count all the spaces
-        result = subject.saveCount("Now is the time for all good men to come to the aid of his country",
-                                   "\\s", "count")
+        result = subject.saveCount(
+            "Now is the time for all good men to come to the aid of his country",
+            "\\s", "count",
+        )
         Assert.assertTrue(result.isSuccess)
         assertEquals(15, context.getIntData("count").toLong())
 
         // count all the, a, to, of, for, is, are
-        result = subject.saveCount("Now is the time for all good men to come to the aid of his country",
-                                   "the | a | to | of | for | is | are ", "count")
+        result = subject.saveCount(
+            "Now is the time for all good men to come to the aid of his country",
+            "the | a | to | of | for | is | are ", "count",
+        )
         Assert.assertTrue(result.isSuccess)
         assertEquals(7, context.getIntData("count").toLong())
     }
@@ -527,7 +540,9 @@ class BaseCommandTest {
 
         val actual = "Vendor \"PCVen18903\" not found. Do you wish to create?"
         assertNotEquals("normal assert would fail", expected, actual)
-        assertTrue("but BaseCommand's assert will pass because we put special character handling there!",
-                   BaseCommand.assertEqualsInternal(expected, actual))
+        assertTrue(
+            "but BaseCommand's assert will pass because we put special character handling there!",
+            BaseCommand.assertEqualsInternal(expected, actual),
+        )
     }
 }

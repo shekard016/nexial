@@ -165,42 +165,46 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
     }
 
     fun assertElementPresent(locator: String): StepResult =
-        if (isElementPresent(locator))
+        if (isElementPresent(locator)) {
             StepResult.success("EXPECTED element '$locator' found")
-        else
+        } else {
             StepResult.fail("Expected element not found at '$locator'")
+        }
 
     fun assertElementNotPresent(locator: String): StepResult =
-        if (isElementPresent(locator))
+        if (isElementPresent(locator)) {
             StepResult.fail("Element matching to '$locator' is found, which is NOT as expected")
-        else
+        } else {
             StepResult.success("No element matching to '$locator' can be found, as EXPECTED")
+        }
 
     fun assertElementEnabled(locator: String): StepResult {
         return try {
             val (element, _) = findElement(locator)
-            if (Objects.isNull(element)) StepResult.fail("No element found via locator '${locator}'")
+            if (Objects.isNull(element)) StepResult.fail("No element found via locator '$locator'")
 
-            if (BooleanUtils.toBoolean(element.getAttribute("enabled")))
-                StepResult.success("Element matching '${locator}' is enabled as EXPECTED")
-            else
-                StepResult.fail("Element matching '${locator}' is NOT enabled")
+            if (BooleanUtils.toBoolean(element.getAttribute("enabled"))) {
+                StepResult.success("Element matching '$locator' is enabled as EXPECTED")
+            } else {
+                StepResult.fail("Element matching '$locator' is NOT enabled")
+            }
         } catch (e: WebDriverException) {
-            StepResult.fail("Unable to find an element via '${locator}': ${e.localizedMessage}")
+            StepResult.fail("Unable to find an element via '$locator': ${e.localizedMessage}")
         }
     }
 
     fun assertElementDisabled(locator: String): StepResult {
         return try {
             val (element, _) = findElement(locator)
-            if (Objects.isNull(element)) StepResult.fail("No element found via locator '${locator}'")
+            if (Objects.isNull(element)) StepResult.fail("No element found via locator '$locator'")
 
-            if (BooleanUtils.toBoolean(element.getAttribute("enabled")))
-                StepResult.fail("Element matching '${locator}' is NOT disabled")
-            else
-                StepResult.success("Element matching '${locator}' is disabled as EXPECTED")
+            if (BooleanUtils.toBoolean(element.getAttribute("enabled"))) {
+                StepResult.fail("Element matching '$locator' is NOT disabled")
+            } else {
+                StepResult.success("Element matching '$locator' is disabled as EXPECTED")
+            }
         } catch (e: WebDriverException) {
-            StepResult.fail("Unable to find an element via '${locator}': ${e.localizedMessage}")
+            StepResult.fail("Unable to find an element via '$locator': ${e.localizedMessage}")
         }
     }
 
@@ -225,8 +229,9 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                     message += "found via '$locator'"
                     ConsoleUtils.log(runId, message)
                     true
-                } else
+                } else {
                     false
+                }
             } catch (e: WebDriverException) {
                 message += "NOT FOUND via '" + locator + "': " + resolveErrorMessage(e)
                 ConsoleUtils.error(runId, message)
@@ -244,8 +249,11 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
             }
         }
 
-        if (locatorsFound < 1) return StepResult.fail(
-            "No data variables of prefix '$prefix' contains the required '$GROUP_LOCATOR_SUFFIX' suffix")
+        if (locatorsFound < 1) {
+            return StepResult.fail(
+                "No data variables of prefix '$prefix' contains the required '$GROUP_LOCATOR_SUFFIX' suffix",
+            )
+        }
 
         val message = logs.toString()
         val errorsFound = errors.toString()
@@ -254,37 +262,42 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
     }
 
     fun assertElementVisible(locator: String): StepResult =
-        if (isElementVisible(locator))
+        if (isElementVisible(locator)) {
             StepResult.success("EXPECTED element '$locator' is present and visible")
-        else
+        } else {
             StepResult.fail("Expected element '$locator' is either not present or not visible")
+        }
 
     fun assertElementNotVisible(locator: String): StepResult =
-        if (!isElementVisible(locator))
+        if (!isElementVisible(locator)) {
             StepResult.success("Element '$locator' is either not present or not visible, as EXPECTED")
-        else
+        } else {
             StepResult.fail("element '$locator' is visible, which is NOT as expected")
+        }
 
     fun assertTextPresent(locator: String, text: String): StepResult =
         if (findElements(locator).any {
-                ConsoleUtils.log("asserting element text '${it.text}' against '${text}'")
+                ConsoleUtils.log("asserting element text '${it.text}' against '$text'")
                 TextUtils.polyMatch(it.text, text)
-            })
-            StepResult.success("The text of '${locator}' matched '${text}'")
-        else
-            StepResult.fail("The text of'${locator}' DOES NOT match '${text}'")
+            }
+        ) {
+            StepResult.success("The text of '$locator' matched '$text'")
+        } else {
+            StepResult.fail("The text of'$locator' DOES NOT match '$text'")
+        }
 
     fun saveText(`var`: String, locator: String): StepResult {
         requiresValidAndNotReadOnlyVariableName(`var`)
 
         val (element, _) = findElement(locator)
         val elementText = element.text
-        if (StringUtils.isEmpty(elementText))
+        if (StringUtils.isEmpty(elementText)) {
             context.removeData(`var`)
-        else
+        } else {
             context.setData(`var`, elementText)
+        }
 
-        return StepResult.success("The text of element '${locator}' saved to `${`var`}` data variable")
+        return StepResult.success("The text of element '$locator' saved to `${`var`}` data variable")
     }
 
     fun saveTextArray(`var`: String, locator: String): StepResult {
@@ -320,15 +333,18 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val values = collectAttributeValues(locator, attribute)
         return if (CollectionUtils.isNotEmpty(values)) {
             val actual = values[0]
-            if (TextUtils.polyMatch(actual, text))
+            if (TextUtils.polyMatch(actual, text)) {
                 StepResult.success("The attribute '$attribute' value '$actual' matches '$text' as EXPECTED")
-            else
+            } else {
                 StepResult.fail("The attribute '$attribute' value '$actual' DOES NOT match '$text'")
-        } else
-            if (StringUtils.isEmpty(text))
+            }
+        } else {
+            if (StringUtils.isEmpty(text)) {
                 StepResult.success("No attribute value found, and none was expected")
-            else
+            } else {
                 StepResult.fail("Either no element matches '$locator' or none contains the attribute '$attribute'")
+            }
+        }
     }
 
     fun waitForElementPresent(locator: String, waitMs: String): StepResult {
@@ -353,10 +369,11 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
     fun assertAlertPresent(text: String): StepResult {
         val assertText = !context.isNullOrEmptyOrBlankValue(text)
         val msgSuffix = if (assertText) "with text $text" else ""
-        return if (isAlertPresent(text))
+        return if (isAlertPresent(text)) {
             StepResult.success("EXPECTED alert dialog $msgSuffix found on current window")
-        else
+        } else {
             StepResult.fail("EXPECTED alert dialog $msgSuffix NOT found")
+        }
     }
 
     internal fun isAlertPresent(text: String): Boolean {
@@ -365,10 +382,10 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         return when (mobileService.profile.mobileType) {
             ANDROID, ANDROID_BROWSERSTACK ->
                 throw IllegalArgumentException("This command is not supported on Android device")
-            IOS, IOS_BROWSERSTACK         -> {
+            IOS, IOS_BROWSERSTACK -> {
                 isElementPresent(
                     "$iosAlertLocator//*[@type='XCUIElementTypeStaticText'" +
-                    if (assertText) " and ${MobileLocatorHelper.resolveFilter("value", text)}]" else "]"
+                        if (assertText) " and ${MobileLocatorHelper.resolveFilter("value", text)}]" else "]",
                 )
             }
         }
@@ -381,15 +398,16 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val mobileService = getMobileService()
         return when (mobileService.profile.mobileType) {
             ANDROID, ANDROID_BROWSERSTACK -> StepResult.fail("This command is not supported on Android device")
-            IOS, IOS_BROWSERSTACK         -> {
+            IOS, IOS_BROWSERSTACK -> {
                 val alertOption = "$iosAlertLocator//*[@type='XCUIElementTypeButton' and " +
-                                  "${MobileLocatorHelper.resolveFilter("label", option)}]"
+                    "${MobileLocatorHelper.resolveFilter("label", option)}]"
                 if (isElementPresent(alertOption)) {
                     val (element, _) = findElement(alertOption)
                     element.click()
                     StepResult.success("Alert dialog dismissed via '$option'")
-                } else
+                } else {
                     StepResult.fail("No alert dialog with option '$option' found")
+                }
             }
         }
     }
@@ -404,7 +422,7 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val mobileService = getMobileService()
         return when (mobileService.profile.mobileType) {
             ANDROID, ANDROID_BROWSERSTACK -> StepResult.fail("This command is not supported on Android device")
-            IOS, IOS_BROWSERSTACK         -> {
+            IOS, IOS_BROWSERSTACK -> {
                 val alertMessages = findElements("$iosAlertLocator//*[@type='XCUIElementTypeStaticText']")
                 if (CollectionUtils.isEmpty(alertMessages)) StepResult.fail("No alert dialog found")
 
@@ -426,8 +444,10 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                     val (clearAll, _) = findElement(clearAllNotificationsLocators)
                     clearAll.click()
                 } catch (e: NoSuchElementException) {
-                    ConsoleUtils.log("The 'clear all' button does not exists; likely there's no notification to " +
-                                     "clear at this time")
+                    ConsoleUtils.log(
+                        "The 'clear all' button does not exists; likely there's no notification to " +
+                            "clear at this time",
+                    )
                 }
 
                 try {
@@ -438,7 +458,7 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                 StepResult.success("All notifications cleared")
             }
             // probably doesn't work...
-            IOS, IOS_BROWSERSTACK         -> StepResult.fail("This command is not supported on iOS device")
+            IOS, IOS_BROWSERSTACK -> StepResult.fail("This command is not supported on iOS device")
         }
     }
 
@@ -470,10 +490,12 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
     private fun longTap(target: MobileElement, holdTime: Long) {
         val mobileService = getMobileService()
         toTouchAction(mobileService)
-            .longPress(LongPressOptions.longPressOptions()
-                           .withElement(ElementOption.element(target))
-                           .withPosition(PointOption.point(EDGE_WIDTH, EDGE_WIDTH))
-                           .withDuration(Duration.ofMillis(holdTime)))
+            .longPress(
+                LongPressOptions.longPressOptions()
+                    .withElement(ElementOption.element(target))
+                    .withPosition(PointOption.point(EDGE_WIDTH, EDGE_WIDTH))
+                    .withDuration(Duration.ofMillis(holdTime)),
+            )
             .perform()
         val postTabWaitMs = mobileService.profile.postActionWaitMs
         if (postTabWaitMs > MIN_WAIT_MS) waitFor(postTabWaitMs.toInt())
@@ -482,18 +504,20 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
     private fun toTouchAction(mobileService: MobileService) =
         when (mobileService.profile.mobileType) {
             ANDROID, ANDROID_BROWSERSTACK -> AndroidTouchAction(mobileService.driver)
-            IOS, IOS_BROWSERSTACK         -> IOSTouchAction(mobileService.driver)
+            IOS, IOS_BROWSERSTACK -> IOSTouchAction(mobileService.driver)
         }
 
     /** partially supports polymatcher */
     fun clickByDisplayText(text: String): StepResult {
         requiresNotBlank(text, "invalid display text", text)
         val mobileService = getMobileService()
-        val xpath = StringBuilder(buildString {
-            append("//*[").append(if (mobileService.isAndroid()) "@displayed" else "@visible").append("='true' and ")
-            append(MobileLocatorHelper.resolveLinkTextFilter(mobileService.profile.mobileType, text))
-            append("]")
-        })
+        val xpath = StringBuilder(
+            buildString {
+                append("//*[").append(if (mobileService.isAndroid()) "@displayed" else "@visible").append("='true' and ")
+                append(MobileLocatorHelper.resolveLinkTextFilter(mobileService.profile.mobileType, text))
+                append("]")
+            },
+        )
         return click(xpath.toString())
     }
 
@@ -515,8 +539,10 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
             if (element == null) break
 
             if (maxTries != -1 && attempt >= maxTries) {
-                ConsoleUtils.log("Click attempt has reached the specified maximum value; however at least " +
-                                 "one more element matching '$locator' is found")
+                ConsoleUtils.log(
+                    "Click attempt has reached the specified maximum value; however at least " +
+                        "one more element matching '$locator' is found",
+                )
             }
         }
 
@@ -551,7 +577,8 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
             Actions(mobileService.driver)
                 .moveToElement(element, NumberUtils.toInt(xOffset), NumberUtils.toInt(yOffset))
                 .doubleClick(),
-            mobileService)
+            mobileService,
+        )
         return StepResult.success("Double-clicked on '$locator'")
     }
 
@@ -565,17 +592,18 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
             val (_, findBy) = findElement(locator)
             clearText(findBy)
             val currentText = findElement(findBy).text
-            if (StringUtils.isEmpty(currentText))
+            if (StringUtils.isEmpty(currentText)) {
                 StepResult.success("Element '$locator' cleared")
-            else
+            } else {
                 StepResult.fail("Element '$locator' not cleared; current text is '$currentText'")
+            }
         } else {
             // val findBy = resolveFindBy(locator)
             val (element, findBy) = findElement(locator)
             val elementText = element.text
-            if (StringUtils.equals(elementText, text))
+            if (StringUtils.equals(elementText, text)) {
                 StepResult.success("Element '$locator' already contain text '$text")
-            else {
+            } else {
                 if (StringUtils.isNotEmpty(elementText)) clearText(findBy)
                 findElement(findBy).sendKeys(text)
                 val postWaitMs = mobileService.profile.postActionWaitMs
@@ -584,7 +612,10 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                 // close keyboard if possible
                 if (mobileService.profile.hideKeyboard &&
                     mobileService.isIOS() &&
-                    isElementPresent(iosKeyboardDoneLocator)) click(iosKeyboardDoneLocator)
+                    isElementPresent(iosKeyboardDoneLocator)
+                ) {
+                    click(iosKeyboardDoneLocator)
+                }
 
                 StepResult.success("Text '$text' typed on '$locator'")
             }
@@ -639,12 +670,15 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
 
         requiresNotBlank(direction, "Invalid direction", direction)
         val dir = Direction.values().find { it.detail.equals(direction, true) }
-                  ?: throw IllegalArgumentException("Invalid direction $direction")
+            ?: throw IllegalArgumentException("Invalid direction $direction")
 
         // 1. make sure the specified scroll container exists
         val timeoutBy =
-            if (StringUtils.isBlank(maxWaitMs) || maxWaitMs.trim() == "-1") -1
-            else System.currentTimeMillis() + NumberUtils.toLong(maxWaitMs)
+            if (StringUtils.isBlank(maxWaitMs) || maxWaitMs.trim() == "-1") {
+                -1
+            } else {
+                System.currentTimeMillis() + NumberUtils.toLong(maxWaitMs)
+            }
         val (scrollArea, _) = findElement(scrollTarget)
         val scrollAreaHeight = scrollArea.rect.height
         val scrollAreaWidth = scrollArea.rect.width
@@ -659,11 +693,11 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val yOffset = (scrollAreaHeight * factor).toInt()
         val xOffset = (scrollAreaWidth * factor).toInt()
         val offsets = when (dir) {
-            DOWN  -> Pair(Point(startX, 1), Point(0, yOffset))
-            UP    -> Pair(Point(startX, 1), Point(0, yOffset * -1))
-            LEFT  -> Pair(Point(1, startY), Point(xOffset * -1, 0))
+            DOWN -> Pair(Point(startX, 1), Point(0, yOffset))
+            UP -> Pair(Point(startX, 1), Point(0, yOffset * -1))
+            LEFT -> Pair(Point(1, startY), Point(xOffset * -1, 0))
             RIGHT -> Pair(Point(1, startY), Point(xOffset, 0))
-            else  -> throw IllegalArgumentException("Invalid direction; Percentage on direction not supported - $dir")
+            else -> throw IllegalArgumentException("Invalid direction; Percentage on direction not supported - $dir")
         }
 
         // 3. getting ready to scroll and search
@@ -672,8 +706,9 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val findBys = resolveFindBy(searchFor)
         var matches = waiter.until { findElements(it, findBys) }
         while (matches.isEmpty()) {
-            if (timeoutBy != (-1).toLong() && System.currentTimeMillis() >= timeoutBy)
+            if (timeoutBy != (-1).toLong() && System.currentTimeMillis() >= timeoutBy) {
                 return StepResult.fail("time out while scrolling ${dir.detail} to find $searchFor")
+            }
 
             Actions(driver)
                 .moveToElement(scrollArea, offsets.first.x, offsets.first.y)
@@ -685,54 +720,55 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         }
 
         // 4. all done
-        return if (matches.isNotEmpty())
-            StepResult.success("Element '${searchFor}' found after some scrolling on '${scrollTarget}")
-        else
-            StepResult.fail("Element '${searchFor}' cannot be found after scrolling on '${scrollTarget}")
+        return if (matches.isNotEmpty()) {
+            StepResult.success("Element '$searchFor' found after some scrolling on '$scrollTarget")
+        } else {
+            StepResult.fail("Element '$searchFor' cannot be found after scrolling on '$scrollTarget")
+        }
     }
 
     fun scroll(locator: String, direction: String): StepResult {
         requiresNotBlank(direction, "Invalid direction", direction)
         val dir = Direction.values().find { it.detail.equals(direction, true) }
-                  ?: throw IllegalArgumentException("Invalid direction $direction")
+            ?: throw IllegalArgumentException("Invalid direction $direction")
 
         val (element, _) = findElement(locator)
         val driver = getMobileService().driver
         val screenDimension = driver.manage().window().size
 
         val offsets = when (dir) {
-            DOWN_10P  -> Pair(0, (screenDimension.height * 0.1).toInt())
-            DOWN_20P  -> Pair(0, (screenDimension.height * 0.2).toInt())
-            DOWN_30P  -> Pair(0, (screenDimension.height * 0.3).toInt())
-            DOWN_40P  -> Pair(0, (screenDimension.height * 0.4).toInt())
-            DOWN_50P  -> Pair(0, (screenDimension.height * 0.5).toInt())
-            DOWN_60P  -> Pair(0, (screenDimension.height * 0.6).toInt())
-            DOWN_70P  -> Pair(0, (screenDimension.height * 0.7).toInt())
-            DOWN_80P  -> Pair(0, (screenDimension.height * 0.8).toInt())
-            DOWN_90P  -> Pair(0, (screenDimension.height * 0.9).toInt())
-            DOWN      -> Pair(0, screenDimension.height)
+            DOWN_10P -> Pair(0, (screenDimension.height * 0.1).toInt())
+            DOWN_20P -> Pair(0, (screenDimension.height * 0.2).toInt())
+            DOWN_30P -> Pair(0, (screenDimension.height * 0.3).toInt())
+            DOWN_40P -> Pair(0, (screenDimension.height * 0.4).toInt())
+            DOWN_50P -> Pair(0, (screenDimension.height * 0.5).toInt())
+            DOWN_60P -> Pair(0, (screenDimension.height * 0.6).toInt())
+            DOWN_70P -> Pair(0, (screenDimension.height * 0.7).toInt())
+            DOWN_80P -> Pair(0, (screenDimension.height * 0.8).toInt())
+            DOWN_90P -> Pair(0, (screenDimension.height * 0.9).toInt())
+            DOWN -> Pair(0, screenDimension.height)
 
-            UP_10P    -> Pair(0, (screenDimension.height * 0.1 * -1).toInt())
-            UP_20P    -> Pair(0, (screenDimension.height * 0.2 * -1).toInt())
-            UP_30P    -> Pair(0, (screenDimension.height * 0.3 * -1).toInt())
-            UP_40P    -> Pair(0, (screenDimension.height * 0.4 * -1).toInt())
-            UP_50P    -> Pair(0, (screenDimension.height * 0.5 * -1).toInt())
-            UP_60P    -> Pair(0, (screenDimension.height * 0.6 * -1).toInt())
-            UP_70P    -> Pair(0, (screenDimension.height * 0.7 * -1).toInt())
-            UP_80P    -> Pair(0, (screenDimension.height * 0.8 * -1).toInt())
-            UP_90P    -> Pair(0, (screenDimension.height * 0.9 * -1).toInt())
-            UP        -> Pair(0, screenDimension.height * -1)
+            UP_10P -> Pair(0, (screenDimension.height * 0.1 * -1).toInt())
+            UP_20P -> Pair(0, (screenDimension.height * 0.2 * -1).toInt())
+            UP_30P -> Pair(0, (screenDimension.height * 0.3 * -1).toInt())
+            UP_40P -> Pair(0, (screenDimension.height * 0.4 * -1).toInt())
+            UP_50P -> Pair(0, (screenDimension.height * 0.5 * -1).toInt())
+            UP_60P -> Pair(0, (screenDimension.height * 0.6 * -1).toInt())
+            UP_70P -> Pair(0, (screenDimension.height * 0.7 * -1).toInt())
+            UP_80P -> Pair(0, (screenDimension.height * 0.8 * -1).toInt())
+            UP_90P -> Pair(0, (screenDimension.height * 0.9 * -1).toInt())
+            UP -> Pair(0, screenDimension.height * -1)
 
-            LEFT_10P  -> Pair((screenDimension.width * 0.1 * -1).toInt(), 0)
-            LEFT_20P  -> Pair((screenDimension.width * 0.2 * -1).toInt(), 0)
-            LEFT_30P  -> Pair((screenDimension.width * 0.3 * -1).toInt(), 0)
-            LEFT_40P  -> Pair((screenDimension.width * 0.4 * -1).toInt(), 0)
-            LEFT_50P  -> Pair((screenDimension.width * 0.5 * -1).toInt(), 0)
-            LEFT_60P  -> Pair((screenDimension.width * 0.6 * -1).toInt(), 0)
-            LEFT_70P  -> Pair((screenDimension.width * 0.7 * -1).toInt(), 0)
-            LEFT_80P  -> Pair((screenDimension.width * 0.8 * -1).toInt(), 0)
-            LEFT_90P  -> Pair((screenDimension.width * 0.9 * -1).toInt(), 0)
-            LEFT      -> Pair(screenDimension.width * -1, 0)
+            LEFT_10P -> Pair((screenDimension.width * 0.1 * -1).toInt(), 0)
+            LEFT_20P -> Pair((screenDimension.width * 0.2 * -1).toInt(), 0)
+            LEFT_30P -> Pair((screenDimension.width * 0.3 * -1).toInt(), 0)
+            LEFT_40P -> Pair((screenDimension.width * 0.4 * -1).toInt(), 0)
+            LEFT_50P -> Pair((screenDimension.width * 0.5 * -1).toInt(), 0)
+            LEFT_60P -> Pair((screenDimension.width * 0.6 * -1).toInt(), 0)
+            LEFT_70P -> Pair((screenDimension.width * 0.7 * -1).toInt(), 0)
+            LEFT_80P -> Pair((screenDimension.width * 0.8 * -1).toInt(), 0)
+            LEFT_90P -> Pair((screenDimension.width * 0.9 * -1).toInt(), 0)
+            LEFT -> Pair(screenDimension.width * -1, 0)
 
             RIGHT_10P -> Pair((screenDimension.width * 0.1).toInt(), 0)
             RIGHT_20P -> Pair((screenDimension.width * 0.2).toInt(), 0)
@@ -743,27 +779,29 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
             RIGHT_70P -> Pair((screenDimension.width * 0.7).toInt(), 0)
             RIGHT_80P -> Pair((screenDimension.width * 0.8).toInt(), 0)
             RIGHT_90P -> Pair((screenDimension.width * 0.9).toInt(), 0)
-            RIGHT     -> Pair(screenDimension.width, 0)
+            RIGHT -> Pair(screenDimension.width, 0)
         }
 
-        withPostActionWait(Actions(driver)
-                               .moveToElement(element)
-                               .clickAndHold()
-                               .moveByOffset(offsets.first, offsets.second)
-                               .release()
-                               .pause(500L),
-                           getMobileService())
+        withPostActionWait(
+            Actions(driver)
+                .moveToElement(element)
+                .clickAndHold()
+                .moveByOffset(offsets.first, offsets.second)
+                .release()
+                .pause(500L),
+            getMobileService(),
+        )
         return StepResult.success("Scroll $direction on '$locator'")
     }
 
     fun shake(): StepResult =
         when (val driver = getMobileService().driver) {
             is AndroidDriver -> StepResult.fail("shake() command not yet implemented for Android device")
-            is IOSDriver     -> {
+            is IOSDriver -> {
                 driver.shake()
                 StepResult.success()
             }
-            else             -> executeCommand("shake")
+            else -> executeCommand("shake")
         }
 
     fun lock(): StepResult =
@@ -772,11 +810,11 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                 driver.lockDevice()
                 StepResult.success()
             }
-            is IOSDriver     -> {
+            is IOSDriver -> {
                 driver.lockDevice()
                 StepResult.success()
             }
-            else             -> executeCommand("lock")
+            else -> executeCommand("lock")
         }
 
     fun unlock(): StepResult =
@@ -785,18 +823,19 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                 driver.unlockDevice()
                 StepResult.success()
             }
-            is IOSDriver     -> {
+            is IOSDriver -> {
                 driver.unlockDevice()
                 StepResult.success()
             }
-            else             -> executeCommand("unlock")
+            else -> executeCommand("unlock")
         }
 
     fun assertLocked(): StepResult {
-        return if (isDeviceLocked())
+        return if (isDeviceLocked()) {
             StepResult.success("Device is currently locked, as EXPECTED")
-        else
+        } else {
             StepResult.fail("Device is currently NOT locked")
+        }
     }
 
     fun saveLockStatus(`var`: String): StepResult {
@@ -809,8 +848,10 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
     fun sendSms(phone: String, message: String): StepResult {
         requiresNotBlank(phone, "Invalid phone number", phone)
         requiresNotBlank(message, "Invalid message", message)
-        return executeCommand("sendSMS",
-                              mutableMapOf("phoneNumber" to TextUtils.sanitizePhoneNumber(phone), "message" to message))
+        return executeCommand(
+            "sendSMS",
+            mutableMapOf("phoneNumber" to TextUtils.sanitizePhoneNumber(phone), "message" to message),
+        )
     }
 
     /**
@@ -833,10 +874,14 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
 
         val wait = waitMs(forcedWaitMs)
         MultiTouchAction(driver)
-            .add(newTouchAction(mobileService)
-                     .press(start1From).waitAction(wait).moveTo(end1At).waitAction(wait).release())
-            .add(newTouchAction(mobileService)
-                     .press(start2From).waitAction(wait).moveTo(end2At).waitAction(wait).release())
+            .add(
+                newTouchAction(mobileService)
+                    .press(start1From).waitAction(wait).moveTo(end1At).waitAction(wait).release(),
+            )
+            .add(
+                newTouchAction(mobileService)
+                    .press(start2From).waitAction(wait).moveTo(end2At).waitAction(wait).release(),
+            )
             .perform()
         return StepResult.success("Successfully pinch from ($start1) and ($start2) to ($end1) and ($end2)")
     }
@@ -851,20 +896,20 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
 
         return when (orient) {
             "landscape" ->
-                if (currentOrientation == LANDSCAPE)
+                if (currentOrientation == LANDSCAPE) {
                     StepResult.success("Current screen is already in LANDSCAPE mode")
-                else {
+                } else {
                     driver.rotate(LANDSCAPE)
                     StepResult.success("Successfully rotate screen $mode")
                 }
-            "portrait"  ->
-                if (currentOrientation == PORTRAIT)
+            "portrait" ->
+                if (currentOrientation == PORTRAIT) {
                     StepResult.success("Current screen is already in PORTRAIT mode")
-                else {
+                } else {
                     driver.rotate(PORTRAIT)
                     StepResult.success("Successfully rotate screen $mode")
                 }
-            else        -> StepResult.fail("Unknown orientation: $mode")
+            else -> StepResult.fail("Unknown orientation: $mode")
         }
     }
 
@@ -900,15 +945,16 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
     }
 
     fun hideKeyboard(): StepResult {
-        return if (hideKeyboard(false))
+        return if (hideKeyboard(false)) {
             StepResult.success("execute hide-keyboard successfully")
-        else
+        } else {
             StepResult.success("on-screen keyboard already hidden")
+        }
     }
 
     fun home() = when (getMobileService().profile.mobileType) {
         ANDROID, ANDROID_BROWSERSTACK -> keyPress(HOME.code)
-        IOS, IOS_BROWSERSTACK         -> launchApp("com.apple.springboard")
+        IOS, IOS_BROWSERSTACK -> launchApp("com.apple.springboard")
     }
 
     fun back() = keyPress(BACK.code)
@@ -917,7 +963,7 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
 
     fun recentApps() = when (getMobileService().profile.mobileType) {
         ANDROID, ANDROID_BROWSERSTACK -> keyPress(APP_SWITCH.code)
-        IOS, IOS_BROWSERSTACK         -> {
+        IOS, IOS_BROWSERSTACK -> {
             val pressHome = mapOf("name" to "home")
             val driver = getMobileService().driver
             driver.executeScript(scriptPressButton, pressHome)
@@ -955,18 +1001,18 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                 // 1. click on the dropdown to display the options
                 val (select, _) = findElement(locator)
                 val currentSelectValue = select.text
-                if (StringUtils.equals(currentSelectValue, item))
+                if (StringUtils.equals(currentSelectValue, item)) {
                     StepResult.success("item $item already selected")
-                else {
+                } else {
                     tap(select)
                     // withPostActionWait(Actions(mobileService.driver).click(select), mobileService)
                     waitFor(forcedWaitMs.toInt())
 
                     // 2. find the most likely scrollable container
                     val scrollTarget = findAndroidScrollTarget(driver, select)
-                    if (scrollTarget == null)
+                    if (scrollTarget == null) {
                         StepResult.fail("Unable to locate a usable dropdown")
-                    else {
+                    } else {
                         // 3. determine how many lines to scroll (if needed)
                         val maxScrolls = context.getIntConfig(target, profileName, DROPDOWN_MAX_SCROLL)
                         val scrollAmount = scrollTarget.rect.height / 2
@@ -974,7 +1020,7 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                         val scrollTo = Point(0, (scrollAmount / 2) * -1)
 
                         // 4. scroll downwards until specified item is found
-                        val waiter = newWaiter(forcedWaitMs, "identifying option '${item}'")
+                        val waiter = newWaiter(forcedWaitMs, "identifying option '$item'")
                         var scrollCount = 0
                         val findByOption = By.xpath(MobileLocatorHelper.resolveAndroidDropdownItemLocator(item))
                         var itemElement = waiter.until { scrollTarget.findElements(findByOption) }
@@ -996,29 +1042,32 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                             // itemElement[0].click()
                             tap(itemElement[0], forcedWaitMs)
                             // test that the intended item is selected
-                            val retry = if (StringUtils.startsWith(item, prefixIndex))
+                            val retry = if (StringUtils.startsWith(item, prefixIndex)) {
                                 StringUtils.equals(select.text, currentSelectValue)
-                            else
+                            } else {
                                 !StringUtils.equals(select.text, item)
+                            }
 
                             // 1 last retry...
                             if (retry) tap(itemElement[0], forcedWaitMs)
 
                             ConsoleUtils.log(
-                                "After selecting '$item', the text of the dropdown is now '${select.text}'")
-                            StepResult.success("dropdown option '${item}' selected")
-                        } else
-                            StepResult.fail("Unable to find dropdown option '${item}'")
+                                "After selecting '$item', the text of the dropdown is now '${select.text}'",
+                            )
+                            StepResult.success("dropdown option '$item' selected")
+                        } else {
+                            StepResult.fail("Unable to find dropdown option '$item'")
+                        }
                     }
                 }
             }
-            IOS, IOS_BROWSERSTACK         -> {
+            IOS, IOS_BROWSERSTACK -> {
                 // 1. find the select element / check if intended value is already selected
                 val (select, _) = findElement(locator)
                 val currentSelection = select.getAttribute("value")
-                if (StringUtils.equals(currentSelection, item))
+                if (StringUtils.equals(currentSelection, item)) {
                     StepResult.success("Current selection matched to $item")
-                else {
+                } else {
                     // 2. click on the select element (allow time for dropdown options to display)
                     // withPostActionWait(Actions(mobileService.driver).click(select), mobileService)
                     // waitFor(800)
@@ -1029,9 +1078,9 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                     if (pickers.size > 1 && StringUtils.contains(item, MULTI_PICKER_DELIM)) {
                         val parts = StringUtils.split(item, MULTI_PICKER_DELIM)
                         // if the picker wheels do not match the text splits
-                        if (parts == null || parts.size != pickers.size)
+                        if (parts == null || parts.size != pickers.size) {
                             StepResult.fail("Unable to automate '$item' against ${pickers.size} pick lists")
-                        else {
+                        } else {
                             // 4. designated value to which picker
                             parts.forEachIndexed { index, part ->
                                 if (StringUtils.isNotEmpty(part)) pickers[index].sendKeys(part)
@@ -1065,14 +1114,14 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val resIdTitle = "@resource-id='android:id/title'"
 
         val rootMenu = "//*[@resource-id='$baseResId/toolbar']/android.widget.ImageButton[@content-desc='Show roots']"
-        val rootFolder = "//*[$resIdTitle and @text='${device}']"
+        val rootFolder = "//*[$resIdTitle and @text='$device']"
         val targetFolder = "//*[$resIdTitle and @text='$dir']"
         val subMenu = "//*[@resource-id='$baseResId/sub_menu']"
         val gridView = "$subMenu/*[@content-desc='Grid view']"
         val listView = "$subMenu/*[@content-desc='List view']"
         val files = "//*[@resource-id='$baseResId/container_directory']" +
-                    "//*[@resource-id='$baseResId/dir_list']" +
-                    "/*[@resource-id='$baseResId/item_root']"
+            "//*[@resource-id='$baseResId/dir_list']" +
+            "/*[@resource-id='$baseResId/item_root']"
         val targetFile = "$files//*[$resIdTitle and @text='$filename']"
         val acceptButton = "id=menu_crop"
 
@@ -1098,12 +1147,14 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         }
 
         // step 5. make sure we have at least 1 file in the target folder
-        if (!waitForElementPresent(files, 2000))
+        if (!waitForElementPresent(files, 2000)) {
             return StepResult.fail("Fail to find any files under the '$dir' folder")
+        }
 
         // step 5. click on target file to select
-        if (!waitForElementPresent(targetFile, 2000))
+        if (!waitForElementPresent(targetFile, 2000)) {
             return StepResult.fail("Unable to find the specified file '$filename' under the '$dir' folder")
+        }
 
         tap(targetFile)
 
@@ -1129,13 +1180,13 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                 driver.closeApp()
                 StepResult.success()
             }
-            is IOSDriver     -> {
+            is IOSDriver -> {
                 // no need to reset for XCUITestDriver
                 // driver.resetApp()
                 driver.closeApp()
                 StepResult.success()
             }
-            else             -> executeCommand("closeApp")
+            else -> executeCommand("closeApp")
         }
     }
 
@@ -1158,27 +1209,29 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
 
         val mobileScriptPath =
             StringUtils.appendIfMissing(File(System.getProperty(NEXIAL_HOME)).absolutePath, separator) +
-            NEXIAL_MOBILE_BIN_REL_PATH
+                NEXIAL_MOBILE_BIN_REL_PATH
         val extProcEnv = mapOf(WORKING_DIRECTORY to mobileScriptPath)
 
         val script = mobileScriptPath + when (mobileType) {
             ANDROID, ANDROID_BROWSERSTACK -> "${SCRIPT_COPY_TO_ANDROID}${if (IS_OS_WINDOWS) "cmd" else "sh"}"
-            IOS, IOS_BROWSERSTACK         -> SCRIPT_COPY_TO_IOS
+            IOS, IOS_BROWSERSTACK -> SCRIPT_COPY_TO_IOS
         }
         if (!FileUtil.isFileExecutable(script)) throw RuntimeException(RB.Mobile.text("script.notExecutable", script))
 
         val outcome = when (mobileType) {
             ANDROID, ANDROID_BROWSERSTACK -> {
                 // adb push *file* /storage/emulated/0/Download/
-                if (IS_OS_WINDOWS)
+                if (IS_OS_WINDOWS) {
                     ProcessInvoker.invoke(WIN32_CMD, listOf("/C", script, file, folder.removePrefix("/")), extProcEnv)
-                else
+                } else {
                     ProcessInvoker.invoke(script, listOf(file, folder.removePrefix("/")), extProcEnv)
+                }
             }
-            IOS, IOS_BROWSERSTACK         -> {
+            IOS, IOS_BROWSERSTACK -> {
                 // check file extension (only .png, .jpg, .mp4, .gif, .wbem
-                if (!SUPPORTED_COPY_FILE_EXT.contains(StringUtils.lowerCase(StringUtils.substringAfterLast(file, "."))))
+                if (!SUPPORTED_COPY_FILE_EXT.contains(StringUtils.lowerCase(StringUtils.substringAfterLast(file, ".")))) {
                     throw IllegalArgumentException(RB.Mobile.text("ext.notSupported", file))
+                }
                 ProcessInvoker.invoke(script, listOf(file), extProcEnv)
             }
             // todo: browserstack profile needs to use BS api
@@ -1188,24 +1241,26 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
             ConsoleUtils.log(outcome.stdout)
             ConsoleUtils.log(outcome.stderr)
             StepResult.fail("FAIL to copy '$file' to the mobile device: ${outcome.stdout}")
-        } else
+        } else {
             StepResult.success("File '$file' copied to the mobile device")
+        }
     }
 
     internal fun findAndroidScrollTarget(driver: AppiumDriver<MobileElement>, closest: MobileElement): MobileElement? {
         // find all scrollable containers
         val elements = driver.findElements(By.xpath(scrollableLocator))
-        val scrollables = if (CollectionUtils.isNotEmpty(elements))
+        val scrollables = if (CollectionUtils.isNotEmpty(elements)) {
             elements
-        else
+        } else {
             driver.findElements(By.xpath(scrollableLocator2))
+        }
 
         // find the most likely scrollable container
-        return if (CollectionUtils.isEmpty(scrollables))
+        return if (CollectionUtils.isEmpty(scrollables)) {
             null
-        else if (scrollables.size == 1)
+        } else if (scrollables.size == 1) {
             scrollables[0]
-        else {
+        } else {
             // lastResort is usually the top level scrollable container (x or y < 10)
             val lastResort = scrollables.find { elem -> elem.rect.x < 10 || elem.rect.y < 10 }
             if (lastResort != null) scrollables.remove(lastResort)
@@ -1246,9 +1301,9 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val mobileService = getMobileService()
         val locatorHelper = mobileService.locatorHelper
 
-        return if (RegexUtils.isExact(StringUtils.trim(locator), regexOneOfLocator))
+        return if (RegexUtils.isExact(StringUtils.trim(locator), regexOneOfLocator)) {
             locatorHelper.resolveCompoundLocators(mobileService.profile.mobileType, locator)
-        else {
+        } else {
             val findBy = locatorHelper.resolve(locator)
             if (context.isVerbose) ConsoleUtils.log("resolve locator as $findBy")
             listOf(findBy)
@@ -1285,16 +1340,17 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val mobileService = getMobileService()
         val profile = mobileService.profile
         val locator = toLocatorString(findBy)
-        return if (profile.explicitWaitEnabled)
+        return if (profile.explicitWaitEnabled) {
             try {
-                newWaiter("find element via locator '${locator}'").until { it.findElement(findBy) }
+                newWaiter("find element via locator '$locator'").until { it.findElement(findBy) }
             } catch (e: TimeoutException) {
-                val err = "Timed out after ${profile.explicitWaitMs}ms looking for element that matches '${locator}'"
+                val err = "Timed out after ${profile.explicitWaitMs}ms looking for element that matches '$locator'"
                 log(err)
                 throw NoSuchElementException(err)
             }
-        else
+        } else {
             mobileService.driver.findElement(findBy)
+        }
     }
 
     // @Throws(NoSuchElementException::class)
@@ -1330,8 +1386,9 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
                 log("Timed out after ${profile.explicitWaitMs}ms looking for any element that matches '$locator'")
                 listOf()
             }
-        } else
+        } else {
             findElements(mobileService.driver, findBys)
+        }
     }
 
     internal fun findElements(driver: AppiumDriver<MobileElement>, findBys: List<By>): List<MobileElement> {
@@ -1407,18 +1464,19 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
     internal fun isElementVisible(locator: String) =
         try {
             val (element, _) = findElement(locator)
-            if (Objects.isNull(element))
+            if (Objects.isNull(element)) {
                 false
-            else {
+            } else {
                 when (getMobileService().profile.mobileType) {
                     ANDROID, ANDROID_BROWSERSTACK -> BooleanUtils.toBoolean(element.getAttribute("displayed"))
-                    IOS, IOS_BROWSERSTACK         -> {
+                    IOS, IOS_BROWSERSTACK -> {
                         // special case for image: check either itself or parent for visibility
-                        if (StringUtils.equals(element.getAttribute("type"), "XCUIElementTypeImage"))
+                        if (StringUtils.equals(element.getAttribute("type"), "XCUIElementTypeImage")) {
                             BooleanUtils.toBoolean(element.getAttribute("visible")) ||
-                            BooleanUtils.toBoolean(element.findElementByXPath("./parent::*").getAttribute("visible"))
-                        else
+                                BooleanUtils.toBoolean(element.findElementByXPath("./parent::*").getAttribute("visible"))
+                        } else {
                             BooleanUtils.toBoolean(element.getAttribute("visible"))
+                        }
                     }
                 }
             }
@@ -1453,9 +1511,14 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         } else {
             val link = target.absolutePath
             context.setData(OPT_LAST_OUTPUT_LINK, link)
-            context.setData(OPT_LAST_OUTPUT_PATH,
-                            if (StringUtils.contains(link, "\\")) StringUtils.substringBeforeLast(link, "\\")
-                            else StringUtils.substringBeforeLast(link, "/"))
+            context.setData(
+                OPT_LAST_OUTPUT_PATH,
+                if (StringUtils.contains(link, "\\")) {
+                    StringUtils.substringBeforeLast(link, "\\")
+                } else {
+                    StringUtils.substringBeforeLast(link, "/")
+                },
+            )
             StepResult.success("Screenshot captured for $captured to file '$target'")
         }
     }
@@ -1465,10 +1528,11 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val elementText = element.text
         element.click()
         // blank/spaces must be treated different, at least for android
-        if (StringUtils.isBlank(elementText))
+        if (StringUtils.isBlank(elementText)) {
             for (i in (0..elementText.length)) findElement(findBy).sendKeys(BACK_SPACE)
-        else
+        } else {
             findElement(findBy).clear()
+        }
     }
 
     private fun clearText(findBy: By) {
@@ -1478,10 +1542,11 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
 
         element.click()
         // blank/spaces must be treated different, at least for android
-        if (StringUtils.isBlank(elementText))
+        if (StringUtils.isBlank(elementText)) {
             for (i in (0..elementText.length)) findElement(findBy).sendKeys(BACK_SPACE)
-        else
+        } else {
             findElement(findBy).clear()
+        }
     }
 
     private fun keyPress(code: Int): StepResult = executeCommand(PRESS_KEY_CODE, mutableMapOf("keycode" to code))
@@ -1515,27 +1580,31 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
     private fun isDeviceLocked() =
         when (val driver = getMobileService().driver) {
             is AndroidDriver -> driver.isDeviceLocked
-            is IOSDriver     -> driver.isDeviceLocked
-            else             -> BooleanUtils.toBoolean(Objects.toString(driver.execute("isLocked").value, ""))
+            is IOSDriver -> driver.isDeviceLocked
+            else -> BooleanUtils.toBoolean(Objects.toString(driver.execute("isLocked").value, ""))
         }
 
     private fun hideKeyboard(tryHarder: Boolean) =
         try {
             when (val driver = getMobileService().driver) {
                 is AndroidDriver -> driver.hideKeyboard()
-                is IOSDriver     -> if (tryHarder) driver.hideKeyboard(TAP_OUTSIDE) else driver.hideKeyboard()
-                else             -> driver.hideKeyboard()
+                is IOSDriver -> if (tryHarder) driver.hideKeyboard(TAP_OUTSIDE) else driver.hideKeyboard()
+                else -> driver.hideKeyboard()
             }
             true
         } catch (e: WebDriverException) {
-            if (StringUtils.contains(e.message, "keyboard cannot be closed"))
+            if (StringUtils.contains(e.message, "keyboard cannot be closed")) {
                 ConsoleUtils.log("keyboard already hidden")
+            }
             false
         }
 
     private fun newTouchAction(mobileService: MobileService): TouchAction<*> =
-        if (mobileService.isAndroid()) AndroidTouchAction(mobileService.driver)
-        else IOSTouchAction(mobileService.driver)
+        if (mobileService.isAndroid()) {
+            AndroidTouchAction(mobileService.driver)
+        } else {
+            IOSTouchAction(mobileService.driver)
+        }
 
     private fun toPointOption(position: String, currentScreen: Dimension): PointOption<*> {
         val x = StringUtils.substringBefore(position.lowercase(), ",")
@@ -1544,8 +1613,10 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         val y = StringUtils.substringAfter(position.lowercase(), ",")
         requiresPositiveNumber(y, "Invalid y-coordinate", y)
 
-        return PointOption.point(withinLimit(EDGE_WIDTH, currentScreen.width - EDGE_WIDTH, NumberUtils.toInt(x)),
-                                 withinLimit(EDGE_WIDTH, currentScreen.height - EDGE_WIDTH, NumberUtils.toInt(y)))
+        return PointOption.point(
+            withinLimit(EDGE_WIDTH, currentScreen.width - EDGE_WIDTH, NumberUtils.toInt(x)),
+            withinLimit(EDGE_WIDTH, currentScreen.height - EDGE_WIDTH, NumberUtils.toInt(y)),
+        )
     }
 
     private fun withinLimit(least: Int, most: Int, number: Int) =
@@ -1557,7 +1628,8 @@ class MobileCommand : BaseCommand(), CanTakeScreenshot, ForcefulTerminate {
         return if (waitMillis < MIN_WAIT_MS) {
             ConsoleUtils.log("Invalid 'waitMs' ($postTaWaitMs); default to $fallbackWaitMs")
             fallbackWaitMs
-        } else
+        } else {
             waitMillis
+        }
     }
 }

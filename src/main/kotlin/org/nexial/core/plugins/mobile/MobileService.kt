@@ -60,59 +60,111 @@ class MobileService(val profile: MobileProfile, val remoteUrl: String?) {
             Paths.get(USER_HOME, "node_modules", appiumBinaryRelPath),
             Paths.get(System.getenv("ProgramFiles"), "Appium", "node_modules", appiumBinaryRelPath),
             Paths.get(System.getenv("ProgramFiles(x86)"), "Appium", "node_modules", appiumBinaryRelPath),
-            Paths.get(System.getenv("LOCALAPPDATA"), "Programs", "Appium", "resources", "app", "node_modules",
-                      appiumBinaryRelPath),
-            Paths.get(System.getenv("LOCALAPPDATA"), "Programs", "appium-desktop", "resources", "app", "node_modules",
-                      appiumBinaryRelPath),
-            Paths.get(System.getenv("HOMEDRIVE"), "tools", "appium-desktop", "resources", "app", "node_modules",
-                      appiumBinaryRelPath)
+            Paths.get(
+                System.getenv("LOCALAPPDATA"),
+                "Programs",
+                "Appium",
+                "resources",
+                "app",
+                "node_modules",
+                appiumBinaryRelPath,
+            ),
+            Paths.get(
+                System.getenv("LOCALAPPDATA"),
+                "Programs",
+                "appium-desktop",
+                "resources",
+                "app",
+                "node_modules",
+                appiumBinaryRelPath,
+            ),
+            Paths.get(
+                System.getenv("HOMEDRIVE"),
+                "tools",
+                "appium-desktop",
+                "resources",
+                "app",
+                "node_modules",
+                appiumBinaryRelPath,
+            ),
         )
     } else {
         listOf(
             Paths.get(USER_HOME, "node_modules", appiumBinaryRelPath),
             Paths.get("usr", "local", "lib", "node_modules", appiumBinaryRelPath),
-            Paths.get("Applications", "Appium.app", "Contents", "Resources", "app", "node_modules",
-                      appiumBinaryRelPath),
-            Paths.get(USER_HOME, "Applications", "Appium.app", "Contents", "Resources", "app", "node_modules",
-                      appiumBinaryRelPath),
-            Paths.get(USER_HOME, "tools", "Appium.app", "Contents", "Resources", "app", "node_modules",
-                      appiumBinaryRelPath)
+            Paths.get(
+                "Applications",
+                "Appium.app",
+                "Contents",
+                "Resources",
+                "app",
+                "node_modules",
+                appiumBinaryRelPath,
+            ),
+            Paths.get(
+                USER_HOME,
+                "Applications",
+                "Appium.app",
+                "Contents",
+                "Resources",
+                "app",
+                "node_modules",
+                appiumBinaryRelPath,
+            ),
+            Paths.get(
+                USER_HOME,
+                "tools",
+                "Appium.app",
+                "Contents",
+                "Resources",
+                "app",
+                "node_modules",
+                appiumBinaryRelPath,
+            ),
         )
     }
 
     private val envNodeBinaryPath = "NODE_BINARY_PATH"
     private val possibleNodeBinaryPaths = if (IS_OS_WINDOWS) {
-        listOf(Paths.get(System.getenv("ProgramFiles"), "nodejs", "node.exe"),
-               Paths.get(System.getenv("ProgramFiles(x86)"), "nodejs", "node.exe"),
-               Paths.get(System.getenv("HOMEDRIVE"), "tools", "nodejs", "node.exe")
+        listOf(
+            Paths.get(System.getenv("ProgramFiles"), "nodejs", "node.exe"),
+            Paths.get(System.getenv("ProgramFiles(x86)"), "nodejs", "node.exe"),
+            Paths.get(System.getenv("HOMEDRIVE"), "tools", "nodejs", "node.exe"),
         )
     } else {
-        listOf(Paths.get("usr", "local", "bin", "node"),
-               Paths.get(USER_HOME, "tools", "nodejs", "bin", "node")
+        listOf(
+            Paths.get("usr", "local", "bin", "node"),
+            Paths.get(USER_HOME, "tools", "nodejs", "bin", "node"),
         )
     }
     private val adbLocation = Paths.get(
         StringUtils.trim(StringUtils.defaultIfEmpty(System.getenv("ANDROID_HOME"), System.getenv("ANDROID_SDK_ROOT"))),
         "platform-tools",
-        if (IS_OS_WINDOWS) "adb.exe" else "adb"
+        if (IS_OS_WINDOWS) "adb.exe" else "adb",
     ).toFile().absolutePath
 
-    private val numericCapNames = listOf("remoteAppsCacheLimit", "interKeyDelay", "webviewConnectRetries",
-                                         "appium:maxInstances")
-    private val booleanCapNames = listOf("ensureWebviewsHavePages", "allowTestPackages", "useKeystore",
-                                         "enableWebviewDetailsCollection", "appium:enableWebviewDetailsCollection",
-                                         "dontStopAppOnReset", "unicodeKeyboard", "resetKeyboard", "noSign",
-                                         "ignoreUnimportantViews", "disableAndroidWatchers",
-                                         "recreateChromeDriverSessions", "nativeWebScreenshot", "autoGrantPermissions",
-                                         "gpsEnabled", "skipDeviceInitialization", "chromedriverDisableBuildCheck",
-                                         "skipUnlock", "autoLaunch", "skipLogcatCapture", "disableWindowAnimation",
-                                         "androidNaturalOrientation", "enforceAppInstall", "ignoreHiddenApiPolicyError",
-                                         "allowDelayAdb", "locationServicesEnabled", "locationServicesAuthorized",
-                                         "autoAcceptAlerts", "autoDismissAlerts", "nativeInstrumentsLib",
-                                         "nativeWebTap", "safariAllowPopups", "safariIgnoreFraudWarning",
-                                         "safariOpenLinksInBackground", "keepKeyChains", "showIOSLog",
-                                         "enableAsyncExecuteFromHttps", "skipLogCapture", "skipLogCapture",
-                                         "noReset", "restart", "useNewWDA")
+    private val numericCapNames = listOf(
+        "remoteAppsCacheLimit",
+        "interKeyDelay",
+        "webviewConnectRetries",
+        "appium:maxInstances",
+    )
+    private val booleanCapNames = listOf(
+        "ensureWebviewsHavePages", "allowTestPackages", "useKeystore",
+        "enableWebviewDetailsCollection", "appium:enableWebviewDetailsCollection",
+        "dontStopAppOnReset", "unicodeKeyboard", "resetKeyboard", "noSign",
+        "ignoreUnimportantViews", "disableAndroidWatchers",
+        "recreateChromeDriverSessions", "nativeWebScreenshot", "autoGrantPermissions",
+        "gpsEnabled", "skipDeviceInitialization", "chromedriverDisableBuildCheck",
+        "skipUnlock", "autoLaunch", "skipLogcatCapture", "disableWindowAnimation",
+        "androidNaturalOrientation", "enforceAppInstall", "ignoreHiddenApiPolicyError",
+        "allowDelayAdb", "locationServicesEnabled", "locationServicesAuthorized",
+        "autoAcceptAlerts", "autoDismissAlerts", "nativeInstrumentsLib",
+        "nativeWebTap", "safariAllowPopups", "safariIgnoreFraudWarning",
+        "safariOpenLinksInBackground", "keepKeyChains", "showIOSLog",
+        "enableAsyncExecuteFromHttps", "skipLogCapture", "skipLogCapture",
+        "noReset", "restart", "useNewWDA",
+    )
 
     private var appiumUrl: URL
     internal val driver: AppiumDriver<MobileElement>
@@ -124,18 +176,19 @@ class MobileService(val profile: MobileProfile, val remoteUrl: String?) {
 
     init {
         appiumUrl = when {
-            remoteUrl != null                         -> URL(remoteUrl)
+            remoteUrl != null -> URL(remoteUrl)
             StringUtils.isNotBlank(profile.serverUrl) -> URL(profile.serverUrl)
-            else                                      -> startAppiumLocalService()
+            else -> startAppiumLocalService()
         }
 
         driver = when {
             profile.mobileType.isAndroid() -> AndroidDriver(appiumUrl, newCapabilities())
-            profile.mobileType.isIOS()     -> IOSDriver(appiumUrl, newCapabilities())
-            else                           -> AppiumDriver(appiumUrl, newCapabilities())
+            profile.mobileType.isIOS() -> IOSDriver(appiumUrl, newCapabilities())
+            else -> AppiumDriver(appiumUrl, newCapabilities())
         }
-        if (profile.implicitWaitMs > MIN_WAIT_MS)
+        if (profile.implicitWaitMs > MIN_WAIT_MS) {
             driver.manage().timeouts().implicitlyWait(profile.implicitWaitMs, MILLISECONDS)
+        }
         sessionId = driver.sessionId
 
         locatorHelper = MobileLocatorHelper(this)
@@ -151,7 +204,7 @@ class MobileService(val profile: MobileProfile, val remoteUrl: String?) {
                 driver.closeApp()
             } catch (e: WebDriverException) {
                 ConsoleUtils.error(RB.Mobile.text("error.closeApp", WebDriverExceptionHelper.resolveErrorMessage(e)))
-            }  finally {
+            } finally {
                 sessionId = null
             }
         }
@@ -168,33 +221,42 @@ class MobileService(val profile: MobileProfile, val remoteUrl: String?) {
             // we've got a profile that targets emulator with auto start
             // let's kill the emu process now since we are shutting down appium
             val cmdParams = listOf("-s", profile.config["udid"], "emu", "kill")
-            val outcome = if (IS_OS_WINDOWS)
+            val outcome = if (IS_OS_WINDOWS) {
                 ProcessInvoker.invoke(WIN32_CMD, listOf("/C", "start", adbLocation).plus(cmdParams), null)
-            else
+            } else {
                 ProcessInvoker.invoke(adbLocation, cmdParams, null)
+            }
 
             val msgPrefix = "Emulator (${profile.config["deviceName"]}, ${profile.config["avd"]})"
             var output = StringUtils.trim(StringUtils.trim(outcome.stdout) + "\n" + StringUtils.trim(outcome.stderr))
             if (StringUtils.isNotBlank(output)) output = ": $output"
 
-            ConsoleUtils.log(msgPrefix + (
-                if (outcome.exitStatus == 0) " successfully terminated"
-                else "did not terminate successfully") + output)
+            ConsoleUtils.log(
+                msgPrefix + (
+                    if (outcome.exitStatus == 0) {
+                        " successfully terminated"
+                    } else {
+                        "did not terminate successfully"
+                    }
+                    ) + output,
+            )
         }
     }
 
     fun getAppiumUrl() = appiumUrl
 
     fun manifest() =
-        mapOf("type" to profile.mobileType.platformName,
-              "device name" to profile.config["deviceName"],
-              "avd" to profile.config["avd"],
-              "platform version" to profile.config["platformVersion"],
-              "appium url" to appiumUrl.toString(),
-              "implicit wait" to "${profile.implicitWaitMs}ms",
-              "explicit wait" to "${profile.explicitWaitMs}ms",
-              "session timeout" to "${profile.sessionTimeoutMs}ms",
-              "post action" to "${profile.postActionWaitMs}ms")
+        mapOf(
+            "type" to profile.mobileType.platformName,
+            "device name" to profile.config["deviceName"],
+            "avd" to profile.config["avd"],
+            "platform version" to profile.config["platformVersion"],
+            "appium url" to appiumUrl.toString(),
+            "implicit wait" to "${profile.implicitWaitMs}ms",
+            "explicit wait" to "${profile.explicitWaitMs}ms",
+            "session timeout" to "${profile.sessionTimeoutMs}ms",
+            "post action" to "${profile.postActionWaitMs}ms",
+        )
             .filterValues { StringUtils.isNotBlank(it) && it != "0ms" }
             .mapKeys { "mobile:${it.key}" }
 
@@ -223,26 +285,32 @@ class MobileService(val profile: MobileProfile, val remoteUrl: String?) {
 
     private fun resolveEnv() {
         // check/resolve APPIUM_BINARY_PATH
-        var appiumBinaryPath = StringUtils.defaultIfEmpty(System.getenv(envAppiumBinaryPath),
-                                                          System.getProperty(envAppiumBinaryPath))
+        var appiumBinaryPath = StringUtils.defaultIfEmpty(
+            System.getenv(envAppiumBinaryPath),
+            System.getProperty(envAppiumBinaryPath),
+        )
         if (StringUtils.isBlank(appiumBinaryPath)) {
             val binary = possibleAppiumBinaryPaths.firstOrNull { path -> FileUtil.isFileExecutable(path.toFile()) }
-                         ?: throw RuntimeException(RB.Mobile.text("missing.appium.path", envAppiumBinaryPath))
+                ?: throw RuntimeException(RB.Mobile.text("missing.appium.path", envAppiumBinaryPath))
             appiumBinaryPath = binary.toFile().absolutePath
-        } else if (!FileUtil.isFileExecutable(appiumBinaryPath))
+        } else if (!FileUtil.isFileExecutable(appiumBinaryPath)) {
             throw RuntimeException(RB.Mobile.text("invalid.appium.path", appiumBinaryPath))
+        }
 
         System.setProperty(envAppiumBinaryPath, appiumBinaryPath)
 
         // check/resolve NODE_BINARY_PATH
-        var nodeBinaryPath = StringUtils.defaultIfBlank(System.getenv(envNodeBinaryPath),
-                                                        System.getProperty(envNodeBinaryPath))
+        var nodeBinaryPath = StringUtils.defaultIfBlank(
+            System.getenv(envNodeBinaryPath),
+            System.getProperty(envNodeBinaryPath),
+        )
         if (StringUtils.isBlank(nodeBinaryPath)) {
             val binary = possibleNodeBinaryPaths.firstOrNull { path -> FileUtil.isFileExecutable(path.toFile()) }
-                         ?: throw RuntimeException(RB.Mobile.text("missing.node.path", envNodeBinaryPath))
+                ?: throw RuntimeException(RB.Mobile.text("missing.node.path", envNodeBinaryPath))
             nodeBinaryPath = binary.toFile().absolutePath
-        } else if (!FileUtil.isFileExecutable(nodeBinaryPath))
+        } else if (!FileUtil.isFileExecutable(nodeBinaryPath)) {
             throw RuntimeException(RB.Mobile.text("invalid.node.path", nodeBinaryPath))
+        }
 
         System.setProperty(envNodeBinaryPath, nodeBinaryPath)
     }
@@ -252,21 +320,35 @@ class MobileService(val profile: MobileProfile, val remoteUrl: String?) {
         val caps = DesiredCapabilities()
         val mobileType = profile.mobileType
 
-        safeSetCap(caps,
-                   NEW_COMMAND_TIMEOUT,
-                   if (config.containsKey(NEW_COMMAND_TIMEOUT)) config[NEW_COMMAND_TIMEOUT]
-                   else profile.sessionTimeoutMs / 1000)
+        safeSetCap(
+            caps,
+            NEW_COMMAND_TIMEOUT,
+            if (config.containsKey(NEW_COMMAND_TIMEOUT)) {
+                config[NEW_COMMAND_TIMEOUT]
+            } else {
+                profile.sessionTimeoutMs / 1000
+            },
+        )
 
-        safeSetCap(caps,
-                   AUTOMATION_NAME,
-                   if (config.containsKey(AUTOMATION_NAME)) config[AUTOMATION_NAME]
-                   else mobileType.automationName)
+        safeSetCap(
+            caps,
+            AUTOMATION_NAME,
+            if (config.containsKey(AUTOMATION_NAME)) {
+                config[AUTOMATION_NAME]
+            } else {
+                mobileType.automationName
+            },
+        )
 
-        safeSetCap(caps,
-                   PRINT_PAGE_SOURCE_ON_FIND_FAILURE,
-                   if (config.containsKey(PRINT_PAGE_SOURCE_ON_FIND_FAILURE))
-                       BooleanUtils.toBoolean(config[PRINT_PAGE_SOURCE_ON_FIND_FAILURE])
-                   else false)
+        safeSetCap(
+            caps,
+            PRINT_PAGE_SOURCE_ON_FIND_FAILURE,
+            if (config.containsKey(PRINT_PAGE_SOURCE_ON_FIND_FAILURE)) {
+                BooleanUtils.toBoolean(config[PRINT_PAGE_SOURCE_ON_FIND_FAILURE])
+            } else {
+                false
+            },
+        )
         caps.setCapability("realMobile", true)
 
         if (profile.hideKeyboard) {
@@ -302,7 +384,8 @@ class MobileService(val profile: MobileProfile, val remoteUrl: String?) {
             StringUtils.endsWithIgnoreCase(cap, "timeout") ||
             StringUtils.endsWithIgnoreCase(cap, "duration") ||
             StringUtils.endsWithIgnoreCase(cap, "port") ||
-            numericCapNames.contains(cap)) {
+            numericCapNames.contains(cap)
+        ) {
             caps.setCapability(cap, NumberUtils.toInt(Objects.toString(value)))
             return caps
         }

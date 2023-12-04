@@ -20,7 +20,6 @@ import org.apache.commons.lang3.StringUtils
 import org.jdom2.Attribute
 import org.jdom2.Content
 import org.jdom2.Element
-import org.jdom2.JDOMException
 import org.jdom2.Text
 import org.nexial.commons.utils.XmlUtils
 import org.nexial.core.plugins.xml.XmlCommand.cleanXmlContent
@@ -53,7 +52,7 @@ internal abstract class Modification(val action: String, val requireInput: Boole
 
         candidates.forEach { match ->
             when (match.javaClass) {
-                Element::class.java   -> {
+                Element::class.java -> {
                     val element = match as Element
                     if (childNode != null) {
                         handleModification(element, childNode.clone())
@@ -69,7 +68,7 @@ internal abstract class Modification(val action: String, val requireInput: Boole
                     edits += 1
                 }
 
-                else                  -> {
+                else -> {
                     // err for now
                     ConsoleUtils.log("$action cannot be executed on unsupported node: " + match.javaClass.simpleName)
                 }
@@ -88,7 +87,9 @@ internal abstract class Modification(val action: String, val requireInput: Boole
         val cleanXml = cleanXmlContent(xml)
         if (!StringUtils.startsWith(cleanXml, "<") || !StringUtils.endsWith(cleanXml, ">")) {
             null
-        } else XmlUtils.parse(cleanXml)
+        } else {
+            XmlUtils.parse(cleanXml)
+        }
     } catch (e: IOException) {
         // shh.. exit quietly...
         null

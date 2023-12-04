@@ -218,7 +218,8 @@ class SqsSupport : AwsSupport() {
             .withMaxNumberOfMessages(size)
             .withWaitTimeSeconds((settings.waitMs / 1000).toInt())
             .withVisibilityTimeout(
-                if (settings.visibilityTimeoutMs < 0) -1 else (settings.visibilityTimeoutMs / 1000).toInt())
+                if (settings.visibilityTimeoutMs < 0) -1 else (settings.visibilityTimeoutMs / 1000).toInt(),
+            )
             .withMessageAttributeNames(".*")
             .withAttributeNames(".*")
 
@@ -231,9 +232,12 @@ class SqsSupport : AwsSupport() {
     }
 
     private fun newSQSClient(): AmazonSQS =
-        if (StringUtils.isNotEmpty(url)) AmazonSQSClientBuilder
-            .standard().withEndpointConfiguration(EndpointConfiguration(url, region.getName())).build()
-        else AmazonSQSClientBuilder.standard().withRegion(region).withCredentials(resolveCredentials(region)).build()
+        if (StringUtils.isNotEmpty(url)) {
+            AmazonSQSClientBuilder
+                .standard().withEndpointConfiguration(EndpointConfiguration(url, region.getName())).build()
+        } else {
+            AmazonSQSClientBuilder.standard().withRegion(region).withCredentials(resolveCredentials(region)).build()
+        }
 
     private fun newSQSAsyncClient(): AmazonSQSAsync = AmazonSQSAsyncClientBuilder
         .standard().withRegion(region).withCredentials(resolveCredentials(region)).build()
@@ -248,9 +252,11 @@ class SqsSupport : AwsSupport() {
         MessageAttributeValue().withStringValue(value).withDataType("String")
 }
 
-data class QueueMessage(val id: String,
-                        val body: String,
-                        val receiptHandle: String,
-                        val attributes: Map<String, String>) : Serializable
+data class QueueMessage(
+    val id: String,
+    val body: String,
+    val receiptHandle: String,
+    val attributes: Map<String, String>,
+) : Serializable
 
 data class QueueReceipt(val id: String, val sendTimestamp: Long) : Serializable

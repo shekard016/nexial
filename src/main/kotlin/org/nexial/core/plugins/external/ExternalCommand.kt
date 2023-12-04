@@ -79,7 +79,7 @@ class ExternalCommand : BaseCommand() {
             executionSummary.incrementExecuted()
             executionSummary.incrementFail()
             return StepResult.fail("Test '$className' cannot be found: ${e.message}")
-        }   catch (e: Throwable) {
+        } catch (e: Throwable) {
             // last catch-all
             executionSummary.incrementExecuted()
             executionSummary.incrementFail()
@@ -102,7 +102,7 @@ class ExternalCommand : BaseCommand() {
         } catch (e: Exception) {
             StepResult.fail(e.message)
         } finally {
-            //attach link to results
+            // attach link to results
             addLinkRef("Follow the link to view the output", "output", fileName)
         }
     }
@@ -122,17 +122,18 @@ class ExternalCommand : BaseCommand() {
         } catch (e: Exception) {
             StepResult.fail(e.message)
         } finally {
-            //attach link to results
+            // attach link to results
             addLinkRef("Follow the link to view the output", "output", fileName)
         }
     }
 
     fun terminate(programName: String): StepResult {
         requires(StringUtils.isNotBlank(programName), "empty/null programName")
-        return if (RuntimeUtils.terminateInstance(programName))
+        return if (RuntimeUtils.terminateInstance(programName)) {
             StepResult.success("Program $programName successfully terminated")
-        else
+        } else {
             StepResult.fail("Program $programName NOT terminated successfully, check log for detail")
+        }
     }
 
     /**
@@ -180,12 +181,13 @@ class ExternalCommand : BaseCommand() {
         requires(StringUtils.isNotBlank(filePath), "empty/null programName")
         val outcome = ExecUtils.openFileWaitForStatus(filePath)
 
-        return if (outcome.exitStatus == 0)
+        return if (outcome.exitStatus == 0) {
             StepResult.success("Successfully opened $filePath")
-        else if (StringUtils.isNotBlank(outcome.stderr))
+        } else if (StringUtils.isNotBlank(outcome.stderr)) {
             StepResult.fail(outcome.stderr)
-        else
+        } else {
             StepResult.fail("Unable to open $filePath")
+        }
     }
 
     companion object {
@@ -200,15 +202,17 @@ class ExternalCommand : BaseCommand() {
 
         @JvmStatic
         @Throws(IOException::class, InterruptedException::class)
-        fun runProgram(programPathAndParams: String, env: MutableMap<String, String>, wait:Boolean) {
+        fun runProgram(programPathAndParams: String, env: MutableMap<String, String>, wait: Boolean) {
             val programAndParams = RuntimeUtils.formatCommandLine(programPathAndParams)
-            if (programAndParams.isEmpty())
+            if (programAndParams.isEmpty()) {
                 throw IllegalArgumentException("Unable to parse program and parameters: $programAndParams")
+            }
 
-            if (wait)
+            if (wait) {
                 invoke(programAndParams[0], programAndParams.filterIndexed { index, _ -> index > 0 }, env)
-            else
+            } else {
                 invokeNoWait(programAndParams[0], programAndParams.filterIndexed { index, _ -> index > 0 }, env)
+            }
         }
     }
 }

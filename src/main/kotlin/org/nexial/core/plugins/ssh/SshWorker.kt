@@ -48,17 +48,21 @@ open class SshWorker(internal val action: TransferAction, val remote: String, va
 
     internal fun preActionChecks() {
         val prefix = "[$action]: "
-        if (remoteMustBeFQ.contains(action) && !remote.startsWith("/"))
+        if (remoteMustBeFQ.contains(action) && !remote.startsWith("/")) {
             throw IllegalArgumentException("$prefix$msgRemoteFQ")
+        }
 
-        if (remoteMustBeSingle.contains(action) && remote.contains("*"))
+        if (remoteMustBeSingle.contains(action) && remote.contains("*")) {
             throw IllegalArgumentException("$prefix$msgRemoteNoWildcard")
+        }
 
-        if (localMustNotBeFQ.contains(action) && StringUtils.isBlank(local))
+        if (localMustNotBeFQ.contains(action) && StringUtils.isBlank(local)) {
             throw IllegalArgumentException("$prefix$msgLocalFQ")
+        }
 
-        if (localMustBeSingle.contains(action) && (local == null || local.contains("*")))
+        if (localMustBeSingle.contains(action) && (local == null || local.contains("*"))) {
             throw IllegalArgumentException("$prefix$msgLocalNoWildcard")
+        }
     }
 
     internal fun deriveFQN(path: String, filename: String) = File(path).absolutePath + separator + filename
@@ -75,8 +79,7 @@ open class SshWorker(internal val action: TransferAction, val remote: String, va
         return outcome
     }
 
-    internal fun addSingleFileSuccess(outcome: RemoteFileActionOutcome, affected: String?, message: String):
-            RemoteFileActionOutcome {
+    internal fun addSingleFileSuccess(outcome: RemoteFileActionOutcome, affected: String?, message: String): RemoteFileActionOutcome {
         ConsoleUtils.log("${logRemoteHeader(outcome)}[$affected] $message - SUCCESS")
         outcome.addAffected(affected)
         return outcome
@@ -87,21 +90,21 @@ open class SshWorker(internal val action: TransferAction, val remote: String, va
     internal fun logLocalHeader(o: RemoteFileActionOutcome) = "[${o.protocol} ${o.action} ${o.localPath}] - "
 
     internal fun listLocal(local: String) =
-            when {
-                FileUtil.isDirectoryReadable(local) ->
-                    FileUtils.listFiles(File(local), FileFileFilter.INSTANCE, DIRECTORY).toList()
-                FileUtil.isFileReadable(local)      ->
-                    listOf(File(local))
-                else                                -> {
-                    val localPath = StringUtils.replace(local, "\\", "/")
-                    val dir = StringUtils.substringBeforeLast(localPath, "/")
-                    val pattern = localPath.substringAfterLast("/")
-                        .replace(".", "\\.")
-                        .replace("*", ".+")
-                        .replace(":", "\\:")
-                    FileUtils.listFiles(File(dir), RegexFileFilter(pattern), DIRECTORY).toList()
-                }
+        when {
+            FileUtil.isDirectoryReadable(local) ->
+                FileUtils.listFiles(File(local), FileFileFilter.INSTANCE, DIRECTORY).toList()
+            FileUtil.isFileReadable(local) ->
+                listOf(File(local))
+            else -> {
+                val localPath = StringUtils.replace(local, "\\", "/")
+                val dir = StringUtils.substringBeforeLast(localPath, "/")
+                val pattern = localPath.substringAfterLast("/")
+                    .replace(".", "\\.")
+                    .replace("*", ".+")
+                    .replace(":", "\\:")
+                FileUtils.listFiles(File(dir), RegexFileFilter(pattern), DIRECTORY).toList()
             }
+        }
 
     @Throws(JSchException::class)
     internal fun connect(connection: SshClientConnection): Session {
@@ -155,15 +158,15 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
         return try {
             when (action) {
                 MOVE_FROM -> copyRemoteToLocal(channel, outcome, true)
-                MOVE_TO   -> copyLocalToRemote(channel, outcome, true)
+                MOVE_TO -> copyLocalToRemote(channel, outcome, true)
                 COPY_FROM -> copyRemoteToLocal(channel, outcome, false)
-                COPY_TO   -> copyLocalToRemote(channel, outcome, false)
-                LIST      -> list(channel, outcome)
-                DELETE    -> delete(channel, outcome)
+                COPY_TO -> copyLocalToRemote(channel, outcome, false)
+                LIST -> list(channel, outcome)
+                DELETE -> delete(channel, outcome)
             }
         } catch (e: JSchException) {
             addErrorOnRemote(outcome, e.message!!)
-        }  finally {
+        } finally {
             closeSshClient(session, channel)
         }.end()
     }
@@ -173,8 +176,9 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
 
         ConsoleUtils.log("${logRemoteHeader(outcome)}list from $remote: ${CollectionUtils.size(remoteFiles)} file(s)")
 
-        if (CollectionUtils.isEmpty(remoteFiles))
+        if (CollectionUtils.isEmpty(remoteFiles)) {
             return addSingleFileSuccess(outcome, null, "No files found via (sftp) ${outcome.remotePath}")
+        }
 
         val remoteDir = resolveRemoteParentPath(outcome, remoteFiles)
         remoteFiles.forEach { entry ->
@@ -188,13 +192,12 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
     }
 
     private fun delete(channel: ChannelSftp, outcome: RemoteFileActionOutcome): RemoteFileActionOutcome {
-
         val remote = outcome.remotePath
         val remoteFiles = channel.ls(remote)
         val remoteFileCount = CollectionUtils.size(remoteFiles)
-        return if (remoteFileCount < 0)
+        return if (remoteFileCount < 0) {
             addSingleFileSuccess(outcome, null, "No files to delete (sftp) from $remote")
-        else {
+        } else {
             if (remoteFileCount == 1) {
                 val lstat = channel.lstat(remote)
                 if (lstat.isDir) {
@@ -218,24 +221,23 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
         }
     }
 
-    private fun copyRemoteToLocal(channel: ChannelSftp, outcome: RemoteFileActionOutcome, move: Boolean):
-            RemoteFileActionOutcome {
-
+    private fun copyRemoteToLocal(channel: ChannelSftp, outcome: RemoteFileActionOutcome, move: Boolean): RemoteFileActionOutcome {
         // list remote files
         val remoteFiles = channel.ls(remote)
-        return if (CollectionUtils.isEmpty(remoteFiles))
+        return if (CollectionUtils.isEmpty(remoteFiles)) {
             addErrorOnRemote(outcome, "remote file ${outcome.remotePath} cannot be found")
-        else {
+        } else {
             // if single file
-            if (remoteFiles.size == 1)
+            if (remoteFiles.size == 1) {
                 copyRemoteToLocal(channel, remoteFiles[0] as LsEntry, remote, local!!, outcome, move)
-            else {
+            } else {
                 // if multiple files
                 val remotePath = StringUtils.substringBeforeLast(remote, "/") + "/"
                 val localPath = StringUtils.appendIfMissing(local, separator)
                 remoteFiles.forEach { file ->
-                    if (file is LsEntry && !file.attrs.isDir)
+                    if (file is LsEntry && !file.attrs.isDir) {
                         copyRemoteToLocal(channel, file, remotePath + file.filename, localPath, outcome, move)
+                    }
                 }
 
                 outcome
@@ -243,13 +245,14 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
         }
     }
 
-    private fun copyRemoteToLocal(channel: ChannelSftp,
-                                  remoteEntry: LsEntry,
-                                  remote: String,
-                                  local: String,
-                                  outcome: RemoteFileActionOutcome,
-                                  move: Boolean): RemoteFileActionOutcome {
-
+    private fun copyRemoteToLocal(
+        channel: ChannelSftp,
+        remoteEntry: LsEntry,
+        remote: String,
+        local: String,
+        outcome: RemoteFileActionOutcome,
+        move: Boolean,
+    ): RemoteFileActionOutcome {
         val filename = remoteEntry.filename
 
         // local might be a directory
@@ -259,8 +262,9 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
         channel.get(remote, localPath)
 
         // 2. check that transfer was successful
-        if (!FileUtil.isFileReadable(localPath))
+        if (!FileUtil.isFileReadable(localPath)) {
             return addErrorOnLocal(outcome, "Local file '${outcome.localPath}' is not accessible")
+        }
 
         // 3. check local file matching remote file size
         val failed = testFileSize(outcome, remoteEntry, File(localPath))
@@ -275,46 +279,48 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
         }
     }
 
-    private fun copyLocalToRemote(channel: ChannelSftp, outcome: RemoteFileActionOutcome, move: Boolean):
-            RemoteFileActionOutcome {
-
+    private fun copyLocalToRemote(channel: ChannelSftp, outcome: RemoteFileActionOutcome, move: Boolean): RemoteFileActionOutcome {
         // list local files
         val localFiles = listLocal(outcome.localPath)
-        if (CollectionUtils.isEmpty(localFiles))
+        if (CollectionUtils.isEmpty(localFiles)) {
             return addErrorOnLocal(outcome, "local file ${outcome.localPath} cannot be found")
+        }
 
         val lstat = channel.lstat(outcome.remotePath)
         val remotePath = StringUtils.appendIfMissing(outcome.remotePath, "/")
 
         // if single file
-        return if (localFiles.size == 1)
-            copyLocalToRemote(channel,
-                              localFiles[0],
-                              if (lstat.isDir) remotePath + localFiles[0].name else outcome.remotePath,
-                              outcome,
-                              move)
-        else {
+        return if (localFiles.size == 1) {
+            copyLocalToRemote(
+                channel,
+                localFiles[0],
+                if (lstat.isDir) remotePath + localFiles[0].name else outcome.remotePath,
+                outcome,
+                move,
+            )
+        } else {
             // if multiple files
             // then we must assume that the remote path is a directory
-            if (!lstat.isDir)
+            if (!lstat.isDir) {
                 addErrorOnRemote(outcome, "remote '${outcome.remotePath}' is NOT a directory as expected")
-            else {
+            } else {
                 for (f in localFiles) copyLocalToRemote(channel, f, remotePath + f.name, outcome, move)
                 outcome
             }
         }
     }
 
-    private fun copyLocalToRemote(channel: ChannelSftp,
-                                  local: File,
-                                  remotePath: String,
-                                  outcome: RemoteFileActionOutcome,
-                                  move: Boolean): RemoteFileActionOutcome {
-
+    private fun copyLocalToRemote(
+        channel: ChannelSftp,
+        local: File,
+        remotePath: String,
+        outcome: RemoteFileActionOutcome,
+        move: Boolean,
+    ): RemoteFileActionOutcome {
         channel.put(local.absolutePath, remotePath)
 
         val remoteFileListing = channel.ls(remotePath)
-                                ?: return addErrorOnRemote(outcome, "Unable to transfer to remote file $remotePath")
+            ?: return addErrorOnRemote(outcome, "Unable to transfer to remote file $remotePath")
 
         val failed = testFileSize(outcome, remoteFileListing[0] as LsEntry, local)
         if (failed != null) return failed
@@ -327,9 +333,11 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
     private fun testFileSize(outcome: RemoteFileActionOutcome, remote: LsEntry, local: File): RemoteFileActionOutcome? {
         val remoteSize = remote.attrs.size
         val localSize = local.length()
-        return if (localSize != remoteSize)
+        return if (localSize != remoteSize) {
             addErrorOnRemote(outcome, "Local file size ($localSize) is different than remote file size ($remoteSize)")
-        else null
+        } else {
+            null
+        }
     }
 
     private fun resolveRemoteParentPath(outcome: RemoteFileActionOutcome, remoteFiles: Vector<Any>): String {
@@ -339,11 +347,14 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
                 // strange...
                 ConsoleUtils.log("possibly an error... Can't resolve remote directory from ${outcome.remotePath}")
                 outcome.remotePath
-            } else
-                if (CollectionUtils.size(remoteFiles) > 1 && dirName == (remoteFiles[0] as LsEntry).filename)
+            } else {
+                if (CollectionUtils.size(remoteFiles) > 1 && dirName == (remoteFiles[0] as LsEntry).filename) {
                     outcome.remotePath.substringBeforeLast("/")
-                else
-                    if (dirName.contains("*")) outcome.remotePath.substringBeforeLast("/") else dirName,
-            "/")
+                } else {
+                    if (dirName.contains("*")) outcome.remotePath.substringBeforeLast("/") else dirName
+                }
+            },
+            "/",
+        )
     }
 }

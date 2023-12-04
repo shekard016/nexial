@@ -30,7 +30,7 @@ import java.util.*
 import kotlin.math.max
 
 class OnDemandInspectionDetector private constructor(private val interval: Long, private val pauseSignal: String) :
-        ForcefulTerminate {
+    ForcefulTerminate {
 
     private var stopNow = false
     private val inputs = mutableListOf<String>()
@@ -38,7 +38,7 @@ class OnDemandInspectionDetector private constructor(private val interval: Long,
     private var timer = Timer()
 
     private class StdinTask(private val br: BufferedReader, private val caller: OnDemandInspectionDetector) :
-            TimerTask() {
+        TimerTask() {
 
         override fun run() {
             if (caller.stopNow) {

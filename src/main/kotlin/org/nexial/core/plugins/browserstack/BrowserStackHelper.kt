@@ -79,7 +79,6 @@ import org.nexial.core.utils.JsonUtils
 import org.nexial.core.utils.WebDriverUtils
 import org.openqa.selenium.MutableCapabilities
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
 import java.io.File
@@ -98,8 +97,9 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
     override fun initWebDriver(): WebDriver {
         val username = context.getStringData(KEY_USERNAME)
         val automateKey = context.getStringData(AUTOMATEKEY)
-        if (StringUtils.isBlank(username) || StringUtils.isBlank(automateKey))
+        if (StringUtils.isBlank(username) || StringUtils.isBlank(automateKey)) {
             throw RuntimeException("Both $KEY_USERNAME and $AUTOMATEKEY are required to use BrowserStack")
+        }
 
         val capabilities = MutableCapabilities()
         WebDriverCapabilityUtils.initCapabilities(context, capabilities)
@@ -151,61 +151,75 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
 
     fun uploadApp(config: BrowserStackConfig, app: String, customId: String?): Map<String, String> {
         val uploadResponse = newWebClient(config, "multipart/form-data").postMultipart(
-            UPLOAD, "${if (StringUtils.isNotBlank(customId)) "custom_id=$customId\n" else ""}file=$app", "file")
+            UPLOAD,
+            "${if (StringUtils.isNotBlank(customId)) "custom_id=$customId\n" else ""}file=$app",
+            "file",
+        )
 
         // 5. validate upload outcome
-        if (uploadResponse.returnCode != 200)
+        if (uploadResponse.returnCode != 200) {
             throw RuntimeException(RB.BrowserStack.text("upload.app.fail", app, showHttpError(uploadResponse)))
+        }
 
         // 6. extract response payload
         val responseBody = JsonUtils.toJSONObject(uploadResponse.body)
         val appUrl = JSONPath.find(responseBody, "app_url")
-        return mapOf("app_url" to appUrl,
-                     "app_id" to appUrl.substringAfter(APP_PREFIX),
-                     "custom_id" to JSONPath.find(responseBody, "custom_id"),
-                     "shareable_id" to JSONPath.find(responseBody, "shareable_id"))
+        return mapOf(
+            "app_url" to appUrl,
+            "app_id" to appUrl.substringAfter(APP_PREFIX),
+            "custom_id" to JSONPath.find(responseBody, "custom_id"),
+            "shareable_id" to JSONPath.find(responseBody, "shareable_id"),
+        )
     }
 
     fun saveUploadApps(config: BrowserStackConfig, customId: String?): String {
         val response = newWebClient(config).get(
-            "$LIST_UPLOADED${if (StringUtils.isNotBlank(customId)) "/$customId" else ""}", "")
-        if (response.returnCode != 200)
+            "$LIST_UPLOADED${if (StringUtils.isNotBlank(customId)) "/$customId" else ""}",
+            "",
+        )
+        if (response.returnCode != 200) {
             throw RuntimeException(RB.BrowserStack.text("list.app.fail", config.user, showHttpError(response)))
+        }
         return response.body
     }
 
     fun deleteUploadedApp(config: BrowserStackConfig, appId: String): String {
         val response = newWebClient(config).delete(DELETE_UPLOADED + appId, "")
-        if (response.returnCode != 200)
+        if (response.returnCode != 200) {
             throw RuntimeException(RB.BrowserStack.text("delete.app.fail", config.user, appId, showHttpError(response)))
+        }
         return response.body
     }
 
     fun listBrowsers(config: BrowserStackConfig): String {
         val response = newWebClient(config).get(LIST_BROWSER, "")
-        if (response.returnCode != 200)
+        if (response.returnCode != 200) {
             throw RuntimeException(RB.BrowserStack.text("list.browsers.fail", config.user, showHttpError(response)))
+        }
         return response.body
     }
 
     fun listDevices(config: BrowserStackConfig): String {
         val response = newWebClient(config).get(LIST_DEVICES, "")
-        if (response.returnCode != 200)
+        if (response.returnCode != 200) {
             throw RuntimeException(RB.BrowserStack.text("list.devices.fail", config.user, showHttpError(response)))
+        }
         return response.body
     }
 
     fun getAppAutomateSessionDetail(config: BrowserStackConfig, sessionId: String): String {
         val response = newWebClient(config).get(resolveSessionUrl(MOBILE_SESSION_URL, sessionId), "")
-        if (response.returnCode != 200)
+        if (response.returnCode != 200) {
             throw RuntimeException(RB.BrowserStack.text("session.not.found", config.user, showHttpError(response)))
+        }
         return response.body
     }
 
     fun getAutomateSessionDetail(config: BrowserStackConfig, sessionId: String): String {
         val response = newWebClient(config).get(resolveSessionUrl(WEB_SESSION_URL, sessionId), "")
-        if (response.returnCode != 200)
+        if (response.returnCode != 200) {
             throw RuntimeException(RB.BrowserStack.text("session.not.found", config.user, showHttpError(response)))
+        }
         return response.body
     }
 
@@ -216,14 +230,17 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
         updateSessionStatus(config, resolveSessionUrl(MOBILE_SESSION_URL, sessionId), status, reason)
 
     private fun handleLocal(capabilities: MutableCapabilities, config: MutableMap<String, String?>) {
-        val enableLocal = if (config.containsKey("local"))
+        val enableLocal = if (config.containsKey("local")) {
             BooleanUtils.toBoolean(config.remove("local"))
-        else
+        } else {
             context.getBooleanData(KEY_ENABLE_LOCAL, SystemVariables.getDefaultBool(KEY_ENABLE_LOCAL))
+        }
         if (!enableLocal) return
 
-        isTerminateLocal = context.getBooleanData(KEY_TERMINATE_LOCAL,
-                                                  SystemVariables.getDefaultBool(KEY_TERMINATE_LOCAL))
+        isTerminateLocal = context.getBooleanData(
+            KEY_TERMINATE_LOCAL,
+            SystemVariables.getDefaultBool(KEY_TERMINATE_LOCAL),
+        )
         val automateKey = context.getStringData(AUTOMATEKEY)
         requiresNotBlank(automateKey, "BrowserStack Access Key not defined via '$AUTOMATEKEY'", automateKey)
         capabilities.setCapability("browserstack.local", true)
@@ -270,10 +287,16 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
 
         // resolution only works for non-mobile platforms
         WebDriverCapabilityUtils.setCapability(
-            capabilities, "resolution",
-            StringUtils.defaultIfBlank(config.remove("resolution"),
-                                       StringUtils.defaultIfBlank(context.getStringData(KEY_RESOLUTION),
-                                                                  context.getStringData(BROWSER_WINDOW_SIZE))))
+            capabilities,
+            "resolution",
+            StringUtils.defaultIfBlank(
+                config.remove("resolution"),
+                StringUtils.defaultIfBlank(
+                    context.getStringData(KEY_RESOLUTION),
+                    context.getStringData(BROWSER_WINDOW_SIZE),
+                ),
+            ),
+        )
         if (StringUtils.isNotBlank(targetOs) && StringUtils.isNotBlank(targetOsVer)) {
             WebDriverCapabilityUtils.setCapability(capabilities, "os", StringUtils.upperCase(targetOs))
             WebDriverCapabilityUtils.setCapability(capabilities, "os_version", targetOsVer)
@@ -286,21 +309,25 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
         // if no target OS specified, then we'll just stick to automation host's OS
         if (SystemUtils.IS_OS_WINDOWS) {
             WebDriverCapabilityUtils.setCapability(capabilities, "os", "Windows")
-            WebDriverCapabilityUtils.setCapability(capabilities, "os_version", when {
-                SystemUtils.IS_OS_WINDOWS_7     -> "7"
-                SystemUtils.IS_OS_WINDOWS_8     -> "8"
-                SystemUtils.IS_OS_WINDOWS_10    -> "10"
-                SystemUtils.IS_OS_WINDOWS_2008  -> "2008"
-                SystemUtils.IS_OS_WINDOWS_95    -> "95"
-                SystemUtils.IS_OS_WINDOWS_98    -> "98"
-                SystemUtils.IS_OS_WINDOWS_2000  -> "2000"
-                SystemUtils.IS_OS_WINDOWS_2003  -> "2003"
-                SystemUtils.IS_OS_WINDOWS_2012  -> "2012"
-                SystemUtils.IS_OS_WINDOWS_NT    -> "NT"
-                SystemUtils.IS_OS_WINDOWS_VISTA -> "VISTA"
-                SystemUtils.IS_OS_WINDOWS_XP    -> "XP"
-                else                            -> ""
-            })
+            WebDriverCapabilityUtils.setCapability(
+                capabilities,
+                "os_version",
+                when {
+                    SystemUtils.IS_OS_WINDOWS_7 -> "7"
+                    SystemUtils.IS_OS_WINDOWS_8 -> "8"
+                    SystemUtils.IS_OS_WINDOWS_10 -> "10"
+                    SystemUtils.IS_OS_WINDOWS_2008 -> "2008"
+                    SystemUtils.IS_OS_WINDOWS_95 -> "95"
+                    SystemUtils.IS_OS_WINDOWS_98 -> "98"
+                    SystemUtils.IS_OS_WINDOWS_2000 -> "2000"
+                    SystemUtils.IS_OS_WINDOWS_2003 -> "2003"
+                    SystemUtils.IS_OS_WINDOWS_2012 -> "2012"
+                    SystemUtils.IS_OS_WINDOWS_NT -> "NT"
+                    SystemUtils.IS_OS_WINDOWS_VISTA -> "VISTA"
+                    SystemUtils.IS_OS_WINDOWS_XP -> "XP"
+                    else -> ""
+                },
+            )
             isRunningWindows = true
             os = "Windows"
             return
@@ -308,26 +335,30 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
 
         if (SystemUtils.IS_OS_MAC_OSX) {
             WebDriverCapabilityUtils.setCapability(capabilities, "os", "OS X")
-            WebDriverCapabilityUtils.setCapability(capabilities, "os_version", when {
-                SystemUtils.IS_OS_MAC_OSX_MAVERICKS     -> "Mavericks"
-                SystemUtils.IS_OS_MAC_OSX_BIG_SUR       -> "Big Sur"
-                SystemUtils.IS_OS_MAC_OSX_CATALINA      -> "Catalina"
-                SystemUtils.IS_OS_MAC_OSX_CHEETAH       -> "Cheetah"
-                SystemUtils.IS_OS_MAC_OSX_EL_CAPITAN    -> "El Capitan"
-                SystemUtils.IS_OS_MAC_OSX_HIGH_SIERRA   -> "High Sierra"
-                SystemUtils.IS_OS_MAC_OSX_JAGUAR        -> "Jaguar"
-                SystemUtils.IS_OS_MAC_OSX_LEOPARD       -> "Leopard"
-                SystemUtils.IS_OS_MAC_OSX_LION          -> "Lion"
-                SystemUtils.IS_OS_MAC_OSX_MOJAVE        -> "Mojave"
-                SystemUtils.IS_OS_MAC_OSX_MOUNTAIN_LION -> "Mountain Lion"
-                SystemUtils.IS_OS_MAC_OSX_PANTHER       -> "Panther"
-                SystemUtils.IS_OS_MAC_OSX_PUMA          -> "Puma"
-                SystemUtils.IS_OS_MAC_OSX_SIERRA        -> "Sierra"
-                SystemUtils.IS_OS_MAC_OSX_SNOW_LEOPARD  -> "Snow Leopard"
-                SystemUtils.IS_OS_MAC_OSX_TIGER         -> "Tiger"
-                SystemUtils.IS_OS_MAC_OSX_YOSEMITE      -> "Yosemite"
-                else                                    -> ""
-            })
+            WebDriverCapabilityUtils.setCapability(
+                capabilities,
+                "os_version",
+                when {
+                    SystemUtils.IS_OS_MAC_OSX_MAVERICKS -> "Mavericks"
+                    SystemUtils.IS_OS_MAC_OSX_BIG_SUR -> "Big Sur"
+                    SystemUtils.IS_OS_MAC_OSX_CATALINA -> "Catalina"
+                    SystemUtils.IS_OS_MAC_OSX_CHEETAH -> "Cheetah"
+                    SystemUtils.IS_OS_MAC_OSX_EL_CAPITAN -> "El Capitan"
+                    SystemUtils.IS_OS_MAC_OSX_HIGH_SIERRA -> "High Sierra"
+                    SystemUtils.IS_OS_MAC_OSX_JAGUAR -> "Jaguar"
+                    SystemUtils.IS_OS_MAC_OSX_LEOPARD -> "Leopard"
+                    SystemUtils.IS_OS_MAC_OSX_LION -> "Lion"
+                    SystemUtils.IS_OS_MAC_OSX_MOJAVE -> "Mojave"
+                    SystemUtils.IS_OS_MAC_OSX_MOUNTAIN_LION -> "Mountain Lion"
+                    SystemUtils.IS_OS_MAC_OSX_PANTHER -> "Panther"
+                    SystemUtils.IS_OS_MAC_OSX_PUMA -> "Puma"
+                    SystemUtils.IS_OS_MAC_OSX_SIERRA -> "Sierra"
+                    SystemUtils.IS_OS_MAC_OSX_SNOW_LEOPARD -> "Snow Leopard"
+                    SystemUtils.IS_OS_MAC_OSX_TIGER -> "Tiger"
+                    SystemUtils.IS_OS_MAC_OSX_YOSEMITE -> "Yosemite"
+                    else -> ""
+                },
+            )
             isRunningOSX = true
             os = "OS X"
         }
@@ -337,25 +368,32 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
         browserName = StringUtils.defaultIfBlank(config.remove(BROWSER), context.getStringData(KEY_BROWSER))
         if (StringUtils.startsWithIgnoreCase(browserName, "iPad") ||
             StringUtils.startsWithIgnoreCase(browserName, "iPhone") ||
-            StringUtils.startsWithIgnoreCase(browserName, "android")) {
+            StringUtils.startsWithIgnoreCase(browserName, "android")
+        ) {
             WebDriverCapabilityUtils.setCapability(capabilities, "browserName", browserName)
             if (StringUtils.startsWithIgnoreCase(browserName, "iPhone")) browser = iphone
             return
         }
 
-        if (StringUtils.isNotBlank(browserName))
+        if (StringUtils.isNotBlank(browserName)) {
             WebDriverCapabilityUtils.setCapability(
                 capabilities,
                 BROWSER,
-                if (StringUtils.length(browserName) < 3)
+                if (StringUtils.length(browserName) < 3) {
                     StringUtils.upperCase(browserName)
-                else
-                    WordUtils.capitalize(browserName))
+                } else {
+                    WordUtils.capitalize(browserName)
+                },
+            )
+        }
 
-        browserVersion = StringUtils.defaultIfBlank(config.remove("browser_version"),
-                                                    context.getStringData(KEY_BROWSER_VER))
-        if (StringUtils.isNotBlank(browserVersion))
+        browserVersion = StringUtils.defaultIfBlank(
+            config.remove("browser_version"),
+            context.getStringData(KEY_BROWSER_VER),
+        )
+        if (StringUtils.isNotBlank(browserVersion)) {
             WebDriverCapabilityUtils.setCapability(capabilities, "browser_version", browserVersion)
+        }
         if (StringUtils.startsWithIgnoreCase(browserName, "Firefox")) browser = firefox
         if (StringUtils.startsWithIgnoreCase(browserName, "Chrome")) browser = chrome
         if (StringUtils.startsWithIgnoreCase(browserName, "Safari")) browser = safari
@@ -367,22 +405,26 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
         WebDriverCapabilityUtils.setCapability(
             capabilities,
             "build",
-            StringUtils.defaultIfBlank(config.remove("build"), context.getStringData(KEY_BUILD_NUM)))
+            StringUtils.defaultIfBlank(config.remove("build"), context.getStringData(KEY_BUILD_NUM)),
+        )
 
         val execDef = context.execDef
         if (execDef != null) {
-            if (execDef.project != null && StringUtils.isNotBlank(execDef.project.name))
+            if (execDef.project != null && StringUtils.isNotBlank(execDef.project.name)) {
                 WebDriverCapabilityUtils.setCapability(capabilities, "project", execDef.project.name)
-            if (StringUtils.isNotBlank(execDef.testScript))
+            }
+            if (StringUtils.isNotBlank(execDef.testScript)) {
                 WebDriverCapabilityUtils.setCapability(capabilities, "name", File(execDef.testScript).name)
+            }
         }
     }
 
     private fun handleOthers(capabilities: MutableCapabilities, config: MutableMap<String, String?>) {
-        val debug = if (config.containsKey("debug"))
+        val debug = if (config.containsKey("debug")) {
             BooleanUtils.toBoolean(config.remove("debug"))
-        else
+        } else {
             context.getBooleanData(KEY_DEBUG, SystemVariables.getDefaultBool(KEY_DEBUG))
+        }
 
         WebDriverCapabilityUtils.setCapability(capabilities, "browserstack.debug", debug)
         if (debug) {
@@ -390,11 +432,18 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
             WebDriverCapabilityUtils.setCapability(capabilities, "browserstack.networkLogs", true)
         }
 
-        WebDriverCapabilityUtils.setCapability(capabilities, "browserstack.use_w3c",
-                                               BooleanUtils.toBoolean(config.remove("use_w3c")))
-        if (context.hasData(KEY_CAPTURE_CRASH))
-            WebDriverCapabilityUtils.setCapability(capabilities, "browserstack.captureCrash",
-                                                   context.getBooleanData(KEY_CAPTURE_CRASH))
+        WebDriverCapabilityUtils.setCapability(
+            capabilities,
+            "browserstack.use_w3c",
+            BooleanUtils.toBoolean(config.remove("use_w3c")),
+        )
+        if (context.hasData(KEY_CAPTURE_CRASH)) {
+            WebDriverCapabilityUtils.setCapability(
+                capabilities,
+                "browserstack.captureCrash",
+                context.getBooleanData(KEY_CAPTURE_CRASH),
+            )
+        }
     }
 
     companion object {
@@ -429,12 +478,15 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
 
         private fun newBrowserStackConfig(context: ExecutionContext): BrowserStackConfig {
             val useSecure = context.getBooleanData(OPT_SECURE_BROWSERSTACK, getDefaultBool(OPT_SECURE_BROWSERSTACK))
-            return BrowserStackConfig("context", mapOf(
-                USERNAME to context.getStringData(KEY_USERNAME),
-                AUTOMATE_KEY to context.getStringData(AUTOMATEKEY),
-                "browser" to context.getStringData(KEY_BROWSER),
-                "$CONF_SERVER.$CONF_SERVER_URL" to if (useSecure) HUB else HUB2
-            ))
+            return BrowserStackConfig(
+                "context",
+                mapOf(
+                    USERNAME to context.getStringData(KEY_USERNAME),
+                    AUTOMATE_KEY to context.getStringData(AUTOMATEKEY),
+                    "browser" to context.getStringData(KEY_BROWSER),
+                    "$CONF_SERVER.$CONF_SERVER_URL" to if (useSecure) HUB else HUB2,
+                ),
+            )
         }
 
         private fun showHttpError(response: Response) =
@@ -443,22 +495,24 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
         // https://www.browserstack.com/docs/automate/api-reference/selenium/session#set-test-status
         fun reportExecutionStatus(context: ExecutionContext, summary: ExecutionSummary): String {
             val sessionId = WebDriverUtils.getSessionId(context)
-                            ?: throw IllegalArgumentException("No BrowserStack session found")
-            return updateSessionStatus(newBrowserStackConfig(context),
-                                       resolveSessionUrl(WEB_SESSION_URL, sessionId),
-                                       if (summary.failCount > 0) "failed" else "passed",
-                                       formatStatusDescription(summary))
+                ?: throw IllegalArgumentException("No BrowserStack session found")
+            return updateSessionStatus(
+                newBrowserStackConfig(context),
+                resolveSessionUrl(WEB_SESSION_URL, sessionId),
+                if (summary.failCount > 0) "failed" else "passed",
+                formatStatusDescription(summary),
+            )
         }
 
-        internal fun updateSessionStatus(config: BrowserStackConfig, url: String, status: String, reason: String):
-            String {
+        internal fun updateSessionStatus(config: BrowserStackConfig, url: String, status: String, reason: String): String {
             ConsoleUtils.log("reporting execution status to BrowserStack...")
             val response = newWebClient(config, WS_JSON_CONTENT_TYPE)
                 .put(url, """{"status":"$status", "reason":"$reason"}""")
-            return if (response.returnCode != 200)
+            return if (response.returnCode != 200) {
                 throw RuntimeException(RB.BrowserStack.text("update.status.fail", url, showHttpError(response)))
-            else
+            } else {
                 response.body
+            }
         }
 
         private fun resolveSessionUrl(url: String, sessionId: String) = StringUtils.replace(url, "{session}", sessionId)
@@ -472,19 +526,23 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
             val project = if (execDef != null && execDef.project != null) execDef.project else context.project
             if (!config.containsKey(PROJECT)) config[PROJECT] = project.name
 
-            if (!config.containsKey(TEST_NAME)) config[TEST_NAME] =
-                if (execDef != null && execDef.testScript != null)
-                    File(execDef.testScript).name.substringBeforeLast(".")
-                else
-                    context.currentScenario
+            if (!config.containsKey(TEST_NAME)) {
+                config[TEST_NAME] =
+                    if (execDef != null && execDef.testScript != null) {
+                        File(execDef.testScript).name.substringBeforeLast(".")
+                    } else {
+                        context.currentScenario
+                    }
+            }
 
             if (!config.containsKey(BUILD)) config[BUILD] = context.getStringData(KEY_BUILD_NUM, context.runId)
         }
 
-        fun addMobileCapabilities(profile: MobileProfile,
-                                  caps: DesiredCapabilities,
-                                  config: MutableMap<String, String>) {
-
+        fun addMobileCapabilities(
+            profile: MobileProfile,
+            caps: DesiredCapabilities,
+            config: MutableMap<String, String>,
+        ) {
             // appId is required for browserstack integration
             // accept either:
             //      bs://9fg0rt...
@@ -510,8 +568,9 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
 
             if (config.containsKey(DEVICE_NAME)) caps.setCapability("device", config.remove(DEVICE_NAME))
             if (config.containsKey(PLATFORM_VERSION)) caps.setCapability("os_version", config.remove(PLATFORM_VERSION))
-            if (config.containsKey(CONF_ORIENTATION))
+            if (config.containsKey(CONF_ORIENTATION)) {
                 caps.setCapability("deviceOrientation", config[CONF_ORIENTATION]!!.lowercase())
+            }
 
             if (profile.geoLocation != null) caps.setCapability("browserstack.gpsLocation", profile.geoLocation)
 
