@@ -140,8 +140,6 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
             driver
         } catch (e: MalformedURLException) {
             throw RuntimeException("Unable to initialize BrowserStack session: " + e.message, e)
-        } catch (e: WebDriverException) {
-            throw RuntimeException("Unable to initialize BrowserStack session: " + e.message, e)
         }
     }
 
@@ -243,8 +241,6 @@ class BrowserStackHelper(context: ExecutionContext) : CloudWebTestingPlatform(co
             isRunningLocal = true
             localExeName = driver.name
         } catch (e: IOException) {
-            throw RuntimeException("unable to start BrowserStackLocal: ${e.message}", e)
-        } catch (e: InterruptedException) {
             throw RuntimeException("unable to start BrowserStackLocal: ${e.message}", e)
         }
     }

@@ -126,8 +126,6 @@ class SqsCommand : BaseCommand() {
             }
         } catch (e: InvalidMessageContentsException) {
             StepResult.fail(RB.SQS.text("send.contentError", queue, e.errorMessage))
-        } catch (e: AmazonSQSException) {
-            StepResult.fail(RB.SQS.text("send.error", queue, e.errorMessage))
         }
     }
 
@@ -141,8 +139,6 @@ class SqsCommand : BaseCommand() {
             sqs.deleteMessage(resolveSqsSettings(context, profile), queue, receiptHandle)
             StepResult.success(RB.SQS.text("delete.done", queue))
         } catch (e: InvalidIdFormatException) {
-            StepResult.fail(RB.SQS.text("delete.error", queue, e.errorMessage))
-        } catch (e: ReceiptHandleIsInvalidException) {
             StepResult.fail(RB.SQS.text("delete.error", queue, e.errorMessage))
         }
     }

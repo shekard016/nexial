@@ -151,9 +151,7 @@ class MobileService(val profile: MobileProfile, val remoteUrl: String?) {
                 driver.closeApp()
             } catch (e: WebDriverException) {
                 ConsoleUtils.error(RB.Mobile.text("error.closeApp", WebDriverExceptionHelper.resolveErrorMessage(e)))
-            } catch (e: Exception) {
-                ConsoleUtils.error(RB.Mobile.text("error.closeApp", e.message))
-            } finally {
+            }  finally {
                 sessionId = null
             }
         }
@@ -162,8 +160,6 @@ class MobileService(val profile: MobileProfile, val remoteUrl: String?) {
             driver.quit()
         } catch (e: WebDriverException) {
             ConsoleUtils.error(RB.Mobile.text("error.shutdown", WebDriverExceptionHelper.resolveErrorMessage(e)))
-        } catch (e: Exception) {
-            ConsoleUtils.error(RB.Mobile.text("error.shutdown", e.message))
         }
 
         if (appiumService != null) appiumService!!.stop()

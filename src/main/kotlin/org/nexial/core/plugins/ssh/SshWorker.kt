@@ -163,9 +163,7 @@ class SftpWorker(action: TransferAction, remote: String, local: String?) : SshWo
             }
         } catch (e: JSchException) {
             addErrorOnRemote(outcome, e.message!!)
-        } catch (e: SftpException) {
-            addErrorOnRemote(outcome, e.message!!)
-        } finally {
+        }  finally {
             closeSshClient(session, channel)
         }.end()
     }

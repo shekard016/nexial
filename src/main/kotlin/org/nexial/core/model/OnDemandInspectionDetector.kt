@@ -50,8 +50,6 @@ class OnDemandInspectionDetector private constructor(private val interval: Long,
                     if (StringUtils.isNotEmpty(input)) caller.inputs.add(input)
                 } catch (e: IOException) {
                     ConsoleUtils.error("Error when detecting console input for On-Demand Inspection: ${e.message}")
-                } catch (e: InterruptedException) {
-                    ConsoleUtils.error("Error when detecting console input for On-Demand Inspection: ${e.message}")
                 }
             }
         }

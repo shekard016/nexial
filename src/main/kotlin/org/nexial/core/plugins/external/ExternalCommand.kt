@@ -79,15 +79,7 @@ class ExternalCommand : BaseCommand() {
             executionSummary.incrementExecuted()
             executionSummary.incrementFail()
             return StepResult.fail("Test '$className' cannot be found: ${e.message}")
-        } catch (e: InstantiationException) {
-            executionSummary.incrementExecuted()
-            executionSummary.incrementFail()
-            return StepResult.fail("Test '$className' cannot be instantiated: ${e.message}")
-        } catch (e: IllegalAccessException) {
-            executionSummary.incrementExecuted()
-            executionSummary.incrementFail()
-            return StepResult.fail("Test '$className' cannot be accessed: ${e.message}")
-        } catch (e: Throwable) {
+        }   catch (e: Throwable) {
             // last catch-all
             executionSummary.incrementExecuted()
             executionSummary.incrementFail()

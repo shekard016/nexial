@@ -88,8 +88,6 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
             driver
         } catch (e: MalformedURLException) {
             throw RuntimeException("Unable to connect to CrossBrowserTesting: ${e.message}", e)
-        } catch (e: WebDriverException) {
-            throw RuntimeException("Unable to initialize CrossBrowserTesting session: ${e.message}", e)
         }
     }
 
@@ -139,8 +137,6 @@ class CrossBrowserTestingHelper(context: ExecutionContext) : CloudWebTestingPlat
             isRunningLocal = true
             localExeName = driver.name
         } catch (e: IOException) {
-            throw RuntimeException("unable to start CrossBrowserTesting Local: ${e.message}", e)
-        } catch (e: InterruptedException) {
             throw RuntimeException("unable to start CrossBrowserTesting Local: ${e.message}", e)
         }
     }
